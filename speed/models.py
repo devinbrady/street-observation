@@ -32,12 +32,12 @@ class Session(db.Model):
 
 
 
-class Obs(db.Model):
+class Observation(db.Model):
     """Record the start and stop time of each car"""
 
-    __tablename__ = 'obs'
-    obs_id = db.Column(UUID(as_uuid=True), primary_key=True)
-    session_id = db.Column(UUID(as_uuid=True))
+    __tablename__ = 'observations'
+    observation_id = db.Column(UUID(as_uuid=True), primary_key=True)
+    session_id = db.Column(UUID(as_uuid=True)) # foreign key
     # valid = True
 
     # observer_a_lat
@@ -51,9 +51,9 @@ class Obs(db.Model):
     mph = db.Column(db.Float)
 
 
-    def __init__(self, obs_id, session_id, distance_miles=None, start_time=None, end_time=None, elapsed_seconds=None, mph=None):
+    def __init__(self, observation_id, session_id, distance_miles=None, start_time=None, end_time=None, elapsed_seconds=None, mph=None):
 
-        self.obs_id = obs_id
+        self.observation_id = observation_id
         self.session_id = session_id
         self.distance_miles = distance_miles
         self.start_time = start_time

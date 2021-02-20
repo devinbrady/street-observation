@@ -47,7 +47,7 @@ def post_time():
 
     timer_type = request.args.get('timer', default=None, type=str)
     session_id = request.args.get('session_id', default=None, type=str)
-    obs_id = request.args.get('obs_id', default=None, type=str)
+    observation_id = request.args.get('observation_id', default=None, type=str)
     distance_miles = request.args.get('distance_miles', default=None, type=str)
     
     
@@ -56,8 +56,8 @@ def post_time():
         utc_time = datetime.utcnow()
 
         if timer_type == 'start':
-            obs_id = models.generate_uuid()
-            obs = models.Obs(obs_id=obs_id, session_id=session_id, start_time=utc_time, distance_miles=distance_miles)
+            observation_id = models.generate_uuid()
+            obs = models.Observation(observation_id=observation_id, session_id=session_id, start_time=utc_time, distance_miles=distance_miles)
 
             db.session.add(obs)
             db.session.commit()
@@ -70,7 +70,7 @@ def post_time():
 
         elif timer_type == 'end':
 
-            this_obs = db.session.query(models.Obs).filter(models.Obs.obs_id == obs_id)
+            this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == observation_id)
             
             # Calculate time and speed
             elapsed_td = utc_time - this_obs.scalar().start_time
@@ -79,24 +79,24 @@ def post_time():
             mph = float(distance_miles) / (elapsed_seconds / 60 / 60)
             
             this_obs.update({
-                models.Obs.end_time: utc_time
-                , models.Obs.elapsed_seconds: elapsed_seconds
-                , models.Obs.mph: mph
+                models.Observation.end_time: utc_time
+                , models.Observation.elapsed_seconds: elapsed_seconds
+                , models.Observation.mph: mph
                 })
             db.session.commit()
 
-            obs_id = None
+            observation_id = None
             timer_status = 'ready_to_start'
     
 
     observations = (
         db.session
-        .query(models.Obs)
+        .query(models.Observation)
         .filter(
-            models.Obs.session_id == session_id
-            , models.Obs.end_time != None
+            models.Observation.session_id == session_id
+            , models.Observation.end_time != None
             )
-        .order_by(models.Obs.start_time.desc())
+        .order_by(models.Observation.start_time.desc())
         .all()
         )
 
@@ -113,7 +113,7 @@ def post_time():
     return render_template(
         'session.html'
         , session_id=session_id
-        , obs_id=obs_id
+        , observation_id=observation_id
         , timer_status=timer_status
         , distance_miles=distance_miles
         , elapsed_seconds=elapsed_seconds

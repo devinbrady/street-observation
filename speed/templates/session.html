@@ -13,7 +13,7 @@
   {% endif %}
 
   {% if timer_status == 'vehicle_in_timer' %}
-      <form action="/session?&timer=end&session_id={{ session_id }}&distance_miles={{ distance_miles }}&obs_id={{ obs_id }}" method="POST">
+      <form action="/session?&timer=end&session_id={{ session_id }}&distance_miles={{ distance_miles }}&observation_id={{ observation_id }}" method="POST">
       <button type="submit" style="background-color:#ff9999;color:black;width:200px;height:50px">End Timer</button>
       </form>
   {% endif %}
