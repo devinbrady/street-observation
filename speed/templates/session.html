@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Solo Session{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+  <h2>Solo Session</h2>
+
+  {% if timer_status == 'ready_to_start' %}
+      <form action="/session?&timer=start&session_id={{ session_id }}&distance_miles={{ distance_miles }}" method="POST">
+      <button type="submit" style="background-color:#66ff99;color:black;width:200px;height:50px">Start Timer</button>
+      </form>  
+  {% endif %}
+
+  {% if timer_status == 'vehicle_in_timer' %}
+      <form action="/session?&timer=end&session_id={{ session_id }}&distance_miles={{ distance_miles }}&obs_id={{ obs_id }}" method="POST">
+      <button type="submit" style="background-color:#ff9999;color:black;width:200px;height:50px">End Timer</button>
+      </form>
+  {% endif %}
+
+
+
+  <h2>Observed Vehicles</h2>
+  <table class="table table-striped">
+  <thead>
+  <tr>
+    <th>Start Time</th>
+    <th>Seconds Elapsed</th>
+    <th>Miles Per Hour</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for obs in observations %}
+    <tr>
+    <td>{{ obs.start_time_local }}</td>
+    <td>{{ '%0.2f'|format(obs.elapsed_seconds|float) }}</td>
+    <td>{{ '%0.1f'|format(obs.mph|float) }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+
+<p>
+    <h2>Debug Info</h2>
+    <ul>
+        <li>session_id = {{ session_id }}</li>
+        <li>distance_miles = {{ distance_miles }}</li>
+        <li>timer_status = {{ timer_status }}</li>
+    </ul>
+</p>
+
+
+
+<p><a href='begin_solo'>End this session and start new session</a></p>
+
+{% endblock %}

@@ -1,0 +1,33 @@
+
+body {
+    margin:30;
+    padding:0;
+    font-family: 'Work Sans', sans-serif;
+}
+
+
+th {
+    background-color: #d9d9d9;
+    padding: 8px;
+}
+
+tr {
+    text-align: center;
+    padding: 4px;
+}
+
+td {
+    border: 1px solid #d9d9d9;
+}
+
+/*.attribute_heading {
+    background-color: #d9d9d9;
+    padding: 8px;
+    width: 150px;
+}
+
+.attribute_value {
+    border: 1px solid #d9d9d9;
+    padding: 4px;
+    text-align: left;
+}
