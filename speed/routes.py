@@ -1,29 +1,13 @@
-import os
 from dateutil import tz
 from datetime import datetime
 
-from flask import Flask, request, render_template
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
+from flask import current_app as app
+from flask import request, render_template
 
-app = Flask(__name__)
-app.static_folder = 'static'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://%s:%s@%s/%s' % (
-    # ARGS.dbuser, ARGS.dbpass, ARGS.dbhost, ARGS.dbname
-    os.environ['DBUSER'], os.environ['DBPASS'], os.environ['DBHOST'], os.environ['DBNAME']
-)
-
-# initialize the database connection
-DB = SQLAlchemy(app)
-
-# initialize database migration management
-MIGRATE = Migrate(app, DB)
+from . import models
+from . import db
 
 local_timezone = 'America/New_York'
-
-from models import *
 
 
 @app.route('/', methods = ['GET'])
@@ -40,12 +24,12 @@ def register_solo_session():
     email = request.form.get('email')
     distance_miles = request.form.get('distance_miles')
 
-    session_id = generate_uuid()
+    session_id = models.generate_uuid()
     session_mode = 'solo'
 
-    solo_session = Session(session_id, session_mode, full_name, email, distance_miles)
-    DB.session.add(solo_session)
-    DB.session.commit()
+    solo_session = models.Session(session_id, session_mode, full_name, email, distance_miles)
+    db.session.add(solo_session)
+    db.session.commit()
 
     return render_template('session.html', timer_status='ready_to_start', session_id=session_id, distance_miles=distance_miles)
 
@@ -71,11 +55,11 @@ def post_time():
         utc_time = datetime.utcnow()
 
         if timer_type == 'start':
-            obs_id = generate_uuid()
-            obs = Obs(obs_id=obs_id, session_id=session_id, start_time=utc_time, distance_miles=distance_miles)
+            obs_id = models.generate_uuid()
+            obs = models.Obs(obs_id=obs_id, session_id=session_id, start_time=utc_time, distance_miles=distance_miles)
 
-            DB.session.add(obs)
-            DB.session.commit()
+            db.session.add(obs)
+            db.session.commit()
 
             elapsed_seconds = None
             mph = None
@@ -85,7 +69,7 @@ def post_time():
 
         elif timer_type == 'end':
 
-            this_obs = DB.session.query(Obs).filter(Obs.obs_id == obs_id)
+            this_obs = db.session.query(models.Obs).filter(models.Obs.obs_id == obs_id)
             
             # Calculate time and speed
             elapsed_td = utc_time - this_obs.scalar().start_time
@@ -94,24 +78,24 @@ def post_time():
             mph = float(distance_miles) / (elapsed_seconds / 60 / 60)
             
             this_obs.update({
-                Obs.end_time: utc_time
-                , Obs.elapsed_seconds: elapsed_seconds
-                , Obs.mph: mph
+                models.Obs.end_time: utc_time
+                , models.Obs.elapsed_seconds: elapsed_seconds
+                , models.Obs.mph: mph
                 })
-            DB.session.commit()
+            db.session.commit()
 
             obs_id = None
             timer_status = 'ready_to_start'
     
 
     observations = (
-        DB.session
-        .query(Obs)
+        db.session
+        .query(models.Obs)
         .filter(
-            Obs.session_id == session_id
-            , Obs.end_time != None
+            models.Obs.session_id == session_id
+            , models.Obs.end_time != None
             )
-        .order_by(Obs.start_time.desc())
+        .order_by(models.Obs.start_time.desc())
         .all()
         )
 
@@ -135,4 +119,3 @@ def post_time():
         , mph=mph
         , observations=observations
         )
-
