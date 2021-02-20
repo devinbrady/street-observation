@@ -8,13 +8,13 @@
 
   {% if timer_status == 'ready_to_start' %}
       <form action="/session?&timer=start&session_id={{ session_id }}&distance_miles={{ distance_miles }}" method="POST">
-      <button type="submit" class="btn btn-success">Start Timer</button>
+      <button type="submit" class="btn btn-success btn-lg">Start Timer</button>
       </form>  
   {% endif %}
 
   {% if timer_status == 'vehicle_in_timer' %}
       <form action="/session?&timer=end&session_id={{ session_id }}&distance_miles={{ distance_miles }}&observation_id={{ observation_id }}" method="POST">
-      <button type="submit" class="btn btn-danger">End Timer</button>
+      <button type="submit" class="btn btn-danger btn-lg">End Timer</button>
       </form>
   {% endif %}
 
