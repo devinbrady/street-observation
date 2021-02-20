@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 
 # initialize the database connection
-DB = SQLAlchemy()
+db = SQLAlchemy()
 
 
 
@@ -45,7 +45,7 @@ def create_app(test_config=None):
             os.environ['DBUSER'], os.environ['DBPASS'], os.environ['DBHOST'], os.environ['DBNAME']
         )
 
-    DB.init_app(app)
+    db.init_app(app)
 
 
 
@@ -72,8 +72,8 @@ def create_app(test_config=None):
         session_mode = 'solo'
 
         solo_session = models.Session(session_id, session_mode, full_name, email, distance_miles)
-        DB.session.add(solo_session)
-        DB.session.commit()
+        db.session.add(solo_session)
+        db.session.commit()
 
         return render_template('session.html', timer_status='ready_to_start', session_id=session_id, distance_miles=distance_miles)
 
@@ -102,8 +102,8 @@ def create_app(test_config=None):
                 obs_id = models.generate_uuid()
                 obs = models.Obs(obs_id=obs_id, session_id=session_id, start_time=utc_time, distance_miles=distance_miles)
 
-                DB.session.add(obs)
-                DB.session.commit()
+                db.session.add(obs)
+                db.session.commit()
 
                 elapsed_seconds = None
                 mph = None
@@ -113,7 +113,7 @@ def create_app(test_config=None):
 
             elif timer_type == 'end':
 
-                this_obs = DB.session.query(models.Obs).filter(models.Obs.obs_id == obs_id)
+                this_obs = db.session.query(models.Obs).filter(models.Obs.obs_id == obs_id)
                 
                 # Calculate time and speed
                 elapsed_td = utc_time - this_obs.scalar().start_time
@@ -126,14 +126,14 @@ def create_app(test_config=None):
                     , models.Obs.elapsed_seconds: elapsed_seconds
                     , models.Obs.mph: mph
                     })
-                DB.session.commit()
+                db.session.commit()
 
                 obs_id = None
                 timer_status = 'ready_to_start'
         
 
         observations = (
-            DB.session
+            db.session
             .query(models.Obs)
             .filter(
                 models.Obs.session_id == session_id
