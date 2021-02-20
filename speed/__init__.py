@@ -6,11 +6,17 @@ from flask import Flask, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 
+# initialize the database connection
+DB = SQLAlchemy()
+
+
+
 def create_app(test_config=None):
 
     app = Flask(__name__)
     app.static_folder = 'static'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 
     if 'GAE_INSTANCE' in os.environ:
@@ -39,11 +45,9 @@ def create_app(test_config=None):
             os.environ['DBUSER'], os.environ['DBPASS'], os.environ['DBHOST'], os.environ['DBNAME']
         )
 
+    DB.init_app(app)
 
 
-    # initialize the database connection
-    # TODO: use g
-    DB = SQLAlchemy(app)
 
     local_timezone = 'America/New_York'
 
@@ -64,10 +68,10 @@ def create_app(test_config=None):
         email = request.form.get('email')
         distance_miles = request.form.get('distance_miles')
 
-        session_id = generate_uuid()
+        session_id = models.generate_uuid()
         session_mode = 'solo'
 
-        solo_session = Session(session_id, session_mode, full_name, email, distance_miles)
+        solo_session = models.Session(session_id, session_mode, full_name, email, distance_miles)
         DB.session.add(solo_session)
         DB.session.commit()
 
@@ -95,8 +99,8 @@ def create_app(test_config=None):
             utc_time = datetime.utcnow()
 
             if timer_type == 'start':
-                obs_id = generate_uuid()
-                obs = Obs(obs_id=obs_id, session_id=session_id, start_time=utc_time, distance_miles=distance_miles)
+                obs_id = models.generate_uuid()
+                obs = models.Obs(obs_id=obs_id, session_id=session_id, start_time=utc_time, distance_miles=distance_miles)
 
                 DB.session.add(obs)
                 DB.session.commit()
@@ -109,7 +113,7 @@ def create_app(test_config=None):
 
             elif timer_type == 'end':
 
-                this_obs = DB.session.query(Obs).filter(Obs.obs_id == obs_id)
+                this_obs = DB.session.query(models.Obs).filter(models.Obs.obs_id == obs_id)
                 
                 # Calculate time and speed
                 elapsed_td = utc_time - this_obs.scalar().start_time
@@ -118,9 +122,9 @@ def create_app(test_config=None):
                 mph = float(distance_miles) / (elapsed_seconds / 60 / 60)
                 
                 this_obs.update({
-                    Obs.end_time: utc_time
-                    , Obs.elapsed_seconds: elapsed_seconds
-                    , Obs.mph: mph
+                    models.Obs.end_time: utc_time
+                    , models.Obs.elapsed_seconds: elapsed_seconds
+                    , models.Obs.mph: mph
                     })
                 DB.session.commit()
 
@@ -130,12 +134,12 @@ def create_app(test_config=None):
 
         observations = (
             DB.session
-            .query(Obs)
+            .query(models.Obs)
             .filter(
-                Obs.session_id == session_id
-                , Obs.end_time != None
+                models.Obs.session_id == session_id
+                , models.Obs.end_time != None
                 )
-            .order_by(Obs.start_time.desc())
+            .order_by(models.Obs.start_time.desc())
             .all()
             )
 
@@ -165,66 +169,3 @@ def create_app(test_config=None):
 
 
 
-
-# # from app import DB
-# # from datetime import datetime
-# from sqlalchemy.dialects.postgresql import UUID
-# import uuid
-
-
-# def generate_uuid():
-#     return str(uuid.uuid4())
-
-
-
-# class Session(DB.Model):
-#     """Record info about a session of observations"""
-
-#     __tablename__ = 'sessions'
-#     session_id = DB.Column(UUID(as_uuid=True), primary_key=True)
-#     session_mode = DB.Column(DB.String(20))
-#     full_name = DB.Column(DB.String(80))
-#     email = DB.Column(DB.String(120))
-#     distance_miles = DB.Column(DB.Float)
-#     created_at = DB.Column(DB.DateTime)
-
-#     def __init__(self, session_id, session_mode, full_name=None, email=None, distance_miles=None):
-
-#         self.session_id = session_id
-#         self.session_mode = session_mode
-#         self.full_name = full_name
-#         self.email = email
-#         self.distance_miles = distance_miles
-#         self.created_at = datetime.utcnow()
-
-
-
-
-# class Obs(DB.Model):
-#     """Record the start and stop time of each car"""
-
-#     __tablename__ = 'obs'
-#     obs_id = DB.Column(UUID(as_uuid=True), primary_key=True)
-#     session_id = DB.Column(UUID(as_uuid=True))
-#     # valid = True
-
-#     # observer_a_lat
-#     # observer_a_lon
-#     # observer_b_lat
-#     # observer_b_lon
-#     distance_miles = DB.Column(DB.Float)
-#     start_time = DB.Column(DB.DateTime)
-#     end_time = DB.Column(DB.DateTime)
-#     elapsed_seconds = DB.Column(DB.Float)
-#     mph = DB.Column(DB.Float)
-
-
-#     def __init__(self, obs_id, session_id, distance_miles=None, start_time=None, end_time=None, elapsed_seconds=None, mph=None):
-
-#         self.obs_id = obs_id
-#         self.session_id = session_id
-#         self.distance_miles = distance_miles
-#         self.start_time = start_time
-#         self.end_time = end_time
-#         self.elapsed_seconds = elapsed_seconds
-#         self.mph = mph
