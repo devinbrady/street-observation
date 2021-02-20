@@ -1,8 +1,9 @@
+import os
 from dateutil import tz
 from datetime import datetime
 
 from flask import current_app as app
-from flask import request, render_template
+from flask import request, render_template, send_from_directory
 
 from . import models
 from . import db
@@ -10,6 +11,11 @@ from . import db
 
 local_timezone = 'America/New_York'
 
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 @app.route('/', methods = ['GET'])
 def display_index():
