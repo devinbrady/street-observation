@@ -1,12 +1,11 @@
 import os
 
 from flask import Flask
+from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 
 
-# initialize the database connection
 db = SQLAlchemy()
-
 
 
 def create_app(test_config=None):
@@ -16,6 +15,8 @@ def create_app(test_config=None):
     app.static_folder = 'static'
 
     db.init_app(app)
+
+    bootstrap = Bootstrap(app)
 
 
     from . import models

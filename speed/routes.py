@@ -28,7 +28,7 @@ def register_solo_session():
     session_id = models.generate_uuid()
     session_mode = 'solo'
 
-    solo_session = models.Session(session_id, session_mode, full_name, email, distance_miles)
+    solo_session = models.ObservationSession(session_id, session_mode, full_name, email, distance_miles)
     db.session.add(solo_session)
     db.session.commit()
 

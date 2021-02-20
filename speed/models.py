@@ -9,7 +9,7 @@ def generate_uuid():
 
 
 
-class Session(db.Model):
+class ObservationSession(db.Model):
     """Record info about a session of observations"""
 
     __tablename__ = 'sessions'

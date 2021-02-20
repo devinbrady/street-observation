@@ -21,17 +21,17 @@
 
 
   <h2>Observed Vehicles</h2>
-  <table class="table table-striped">
+  <table class="table">
   <thead>
   <tr>
-    <th>Start Time</th>
-    <th>Seconds Elapsed</th>
-    <th>Miles Per Hour</th>
+    <th scope="col">Start Time</th>
+    <th scope="col">Seconds Elapsed</th>
+    <th scope="col">Miles Per Hour</th>
   </tr>
   </thead>
   <tbody>
   {% for obs in observations %}
-    <tr>
+    <tr scope="row">
     <td>{{ obs.start_time_local }}</td>
     <td>{{ '%0.2f'|format(obs.elapsed_seconds|float) }}</td>
     <td>{{ '%0.1f'|format(obs.mph|float) }}</td>
