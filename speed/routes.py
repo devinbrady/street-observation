@@ -29,12 +29,13 @@ def display_begin_solo():
 def register_solo_session():
     full_name = request.form.get('full_name')
     email = request.form.get('email')
+    speed_limit_mph = request.form.get('speed_limit_mph')
     distance_miles = request.form.get('distance_miles')
 
     session_id = models.generate_uuid()
     session_mode = 'solo'
 
-    solo_session = models.ObservationSession(session_id, session_mode, full_name, email, distance_miles)
+    solo_session = models.ObservationSession(session_id, session_mode, full_name, email, speed_limit_mph, distance_miles)
     db.session.add(solo_session)
     db.session.commit()
 

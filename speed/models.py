@@ -17,15 +17,17 @@ class ObservationSession(db.Model):
     session_mode = db.Column(db.String(20))
     full_name = db.Column(db.String(80))
     email = db.Column(db.String(120))
+    speed_limit_mph = db.Column(db.Float)
     distance_miles = db.Column(db.Float)
     created_at = db.Column(db.DateTime)
 
-    def __init__(self, session_id, session_mode, full_name=None, email=None, distance_miles=None):
+    def __init__(self, session_id, session_mode, full_name=None, email=None, speed_limit_mph=None, distance_miles=None):
 
         self.session_id = session_id
         self.session_mode = session_mode
         self.full_name = full_name
         self.email = email
+        self.speed_limit_mph = speed_limit_mph
         self.distance_miles = distance_miles
         self.created_at = datetime.utcnow()
 
