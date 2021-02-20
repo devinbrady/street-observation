@@ -7,6 +7,7 @@ from flask import request, render_template
 from . import models
 from . import db
 
+
 local_timezone = 'America/New_York'
 
 

@@ -1,8 +1,6 @@
 import os
-from dateutil import tz
-from datetime import datetime
 
-from flask import Flask, request, render_template
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -15,8 +13,6 @@ def create_app(test_config=None):
 
     app = Flask(__name__)
     app.static_folder = 'static'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 
 
     if 'GAE_INSTANCE' in os.environ:
@@ -47,9 +43,6 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
-
-
-    local_timezone = 'America/New_York'
 
     from . import models
 
