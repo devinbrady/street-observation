@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Observation{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+  <h2>Observation</h2>
+
+  <ul>
+    <li>Observation ID: {{ observation_id }}</li>
+    <li>Session ID: {{ session_id }}</li>
+    <li>Observation Start Date: {{ start_date_local }}</li>
+    <li>Observation Start Time: {{ start_time_local }}</li>
+    <li>Distance in Miles: {{ '%0.3f'|format(distance_miles|float) }}</li>
+    <li>Elapsed Seconds: {{ '%0.1f'|format(elapsed_seconds|float) }}</li>
+    <li>Speed Limit: {{ '%0.0f'|format(speed_limit_mph|float) }}</li>
+    <li>Valid: {{ valid }}</li>
+  </ul>
+
+{% if valid %}
+<form action="/observation/{{ observation_id }}?valid_action=False" method="POST">
+  <button type="submit" class="btn btn-warning">Invalidate Observation</button>
+</form>
+{% else %}
+<form action="/observation/{{ observation_id }}?valid_action=True" method="POST">
+  <button type="submit" class="btn btn-primary">Validate Observation</button>
+</form>
+{% endif %}
+
+
+
+{% endblock %}

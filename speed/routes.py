@@ -4,7 +4,14 @@ from dateutil import tz
 from datetime import datetime
 
 from flask import current_app as app
-from flask import request, render_template, send_from_directory
+from flask import request, render_template, send_from_directory, Response
+
+
+import io
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+from matplotlib.ticker import MaxNLocator
+
 
 from . import models
 from . import db
@@ -13,6 +20,10 @@ from . import db
 local_timezone = 'America/New_York'
 
 
+@app.errorhandler(500)
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return render_template('problem.html', e=e), 500
 
 @app.route('/favicon.ico')
 def favicon():
@@ -48,6 +59,7 @@ def register_solo_session():
         , vehicle_count=0
         , max_speed=None
         , median_speed=None
+        , df=pd.DataFrame()
         )
 
 
@@ -73,7 +85,7 @@ def post_time():
 
         if timer_type == 'start':
             observation_id = models.generate_uuid()
-            obs = models.Observation(observation_id=observation_id, session_id=session_id, start_time=utc_time, distance_miles=distance_miles)
+            obs = models.Observation(observation_id=observation_id, session_id=session_id, start_time=utc_time)
 
             db.session.add(obs)
             db.session.commit()
@@ -92,12 +104,12 @@ def post_time():
             elapsed_td = utc_time - this_obs.scalar().start_time
             elapsed_seconds = elapsed_td.total_seconds()
 
-            mph = float(distance_miles) / (elapsed_seconds / 60 / 60)
+            # mph = float(distance_miles) / (elapsed_seconds / 60 / 60)
             
             this_obs.update({
                 models.Observation.end_time: utc_time
                 , models.Observation.elapsed_seconds: elapsed_seconds
-                , models.Observation.mph: mph
+                # , models.Observation.mph: mph
                 })
             db.session.commit()
 
@@ -105,41 +117,26 @@ def post_time():
             timer_status = 'ready_to_start'
     
 
-    # SQLAlchemy way
-    observations = (
-        db.session
-        .query(models.Observation)
-        .filter(
-            models.Observation.session_id == session_id
-            , models.Observation.end_time != None
-            )
-        .order_by(models.Observation.start_time.desc())
-        .all()
-        )
-
-
-    for o in observations:
-        local_ts = (
-            o.start_time
-            .replace(tzinfo=tz.gettz('UTC'))
-            .astimezone(tz.gettz(local_timezone))
-            )
-
-        o.start_time_local = local_ts.strftime('%l:%M:%S %p')
-
-
-    # Pandas way
     df = pd.read_sql(
-        db.session
-        .query(models.Observation)
-        .filter(
-            models.Observation.session_id == session_id
-            , models.Observation.end_time != None
-            )
-        .order_by(models.Observation.start_time.desc())
-        .statement
+        f'''
+        select
+        o.start_time
+        , o.end_time
+        , o.elapsed_seconds
+        , o.valid
+        , s.distance_miles
+
+        from observations o
+        inner join sessions s using (session_id)
+
+        where s.session_id = '{session_id}'
+        and o.end_time is not null
+
+        order by o.start_time desc
+        '''
         , db.session.bind
         )
+
 
     vehicle_count = len(df)
 
@@ -147,16 +144,21 @@ def post_time():
         max_speed = 0
         median_speed = 0
     else:
-        max_speed = df.mph.max()
-        median_speed = df.mph.median()
 
+        df['mph'] = df['distance_miles'] / (df['elapsed_seconds'] / 60 / 60)
         df['start_time_local'] = (
             df['start_time']
             .dt.tz_localize('UTC')
             .dt.tz_convert(local_timezone)
             .dt.strftime('%l:%M:%S %p')
             )
-    
+
+        valid_observations = df[df.valid].copy()
+
+        max_speed = valid_observations.mph.max()
+        median_speed = valid_observations.mph.median()
+
+
     return render_template(
         'session.html'
         , session_id=session_id
@@ -167,5 +169,119 @@ def post_time():
         , median_speed=median_speed
         , distance_miles=distance_miles
         , elapsed_seconds=elapsed_seconds
-        , observations=observations
+        , df=df
+        )
+
+
+# @app.route('observation/<observation_id>', methods=['POST'])
+# def toggle_valid():
+#     validation_action = request.args.get('validation_action', type=bool)
+
+
+
+
+
+@app.route('/session/<session_id>/plot.png')
+def plot_png(session_id):
+    fig = create_histogram(session_id)
+    output = io.BytesIO()
+    FigureCanvas(fig).print_png(output)
+    return Response(output.getvalue(), mimetype='image/png')
+
+
+def create_histogram(session_id):
+
+    session_observations = pd.read_sql(
+        f'''
+        select
+        o.elapsed_seconds
+        , s.distance_miles
+
+        from observations o
+        inner join sessions s using (session_id)
+
+        where s.session_id = '{session_id}'
+        and o.end_time is not null
+        and o.valid
+        '''
+        , db.session.bind
+        )
+
+    session_observations['mph'] = session_observations['distance_miles'] / (session_observations['elapsed_seconds'] / 60 / 60)
+
+    fig = Figure()
+    axis = fig.add_subplot(1, 1, 1)
+    axis.hist(session_observations['mph'])
+
+    axis.yaxis.set_major_locator(MaxNLocator(integer=True))
+    axis.set_ylabel('Count of Vehicles')
+    axis.set_xlabel('MPH')
+
+    return fig
+
+
+@app.route('/observation/<observation_id>', methods=['GET', 'POST'])
+def render_observation(observation_id):
+
+    if request.method == 'POST':
+        valid_action = request.args.get('valid_action')
+
+        update_query = f'''
+            update observations
+            set valid = {valid_action}
+            where observation_id = '{observation_id}'
+        '''
+
+        resp = db.engine.execute(update_query)
+        print(resp)
+
+
+
+
+    this_obs = pd.read_sql(
+        f'''
+        select
+        o.start_time
+        , o.end_time
+        , o.elapsed_seconds
+        , o.valid
+        , s.session_id
+        , s.distance_miles
+        , s.speed_limit_mph
+
+        from observations o
+        inner join sessions s using (session_id)
+
+        where o.observation_id = '{observation_id}'
+        '''
+        , db.session.bind
+        )
+
+    this_obs['mph'] = this_obs['distance_miles'] / (this_obs['elapsed_seconds'] / 60 / 60)
+    this_obs['start_time_local'] = (
+        this_obs['start_time']
+        .dt.tz_localize('UTC')
+        .dt.tz_convert(local_timezone)
+        .dt.strftime('%l:%M:%S %p')
+        )
+
+    this_obs['start_date_local'] = (
+        this_obs['start_time']
+        .dt.tz_localize('UTC')
+        .dt.tz_convert(local_timezone)
+        .dt.strftime('%b %w, %Y')
+        )
+
+    this_obs_series = this_obs.squeeze()
+
+    return render_template(
+        'observation.html'
+        , observation_id=observation_id
+        , session_id=this_obs_series['session_id']
+        , start_date_local=this_obs_series['start_date_local']
+        , start_time_local=this_obs_series['start_time_local']
+        , distance_miles=this_obs_series['distance_miles']
+        , elapsed_seconds=this_obs_series['elapsed_seconds']
+        , speed_limit_mph=this_obs_series['speed_limit_mph']
+        , valid=this_obs_series['valid']
         )

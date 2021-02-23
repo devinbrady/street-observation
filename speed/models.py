@@ -20,6 +20,11 @@ class ObservationSession(db.Model):
     speed_limit_mph = db.Column(db.Float)
     distance_miles = db.Column(db.Float)
     created_at = db.Column(db.DateTime)
+    # updated_at
+
+    # local timezone
+    # location address
+    # location lat lon
 
     def __init__(self, session_id, session_mode, full_name=None, email=None, speed_limit_mph=None, distance_miles=None):
 
@@ -39,8 +44,8 @@ class Observation(db.Model):
 
     __tablename__ = 'observations'
     observation_id = db.Column(UUID(as_uuid=True), primary_key=True)
-    session_id = db.Column(UUID(as_uuid=True)) # foreign key
-    # valid = True
+    session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'))
+    valid = db.Column(db.Boolean, nullable=False) # todo: rename
 
     # observer_a_lat
     # observer_a_lon
@@ -50,11 +55,14 @@ class Observation(db.Model):
     end_time = db.Column(db.DateTime)
     elapsed_seconds = db.Column(db.Float)
 
+    # updated_at
 
-    def __init__(self, observation_id, session_id, start_time=None, end_time=None, elapsed_seconds=None):
+
+    def __init__(self, observation_id, session_id, valid=True, start_time=None, end_time=None, elapsed_seconds=None):
 
         self.observation_id = observation_id
         self.session_id = session_id
+        self.valid = valid
         self.start_time = start_time
         self.end_time = end_time
         self.elapsed_seconds = elapsed_seconds

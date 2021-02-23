@@ -32,19 +32,30 @@
     <th scope="col">Start Time</th>
     <th scope="col">Seconds Elapsed</th>
     <th scope="col">Miles Per Hour</th>
+    <th scope="col">Valid</th>
   </tr>
   </thead>
   <tbody>
-  {% for obs in observations %}
+  {% for key,obs in df.iterrows() %}
     <tr scope="row">
     <td>{{ obs.start_time_local }}</td>
     <td>{{ '%0.2f'|format(obs.elapsed_seconds|float) }}</td>
     <td>{{ '%0.1f'|format(obs.mph|float) }}</td>
+    {% if obs.valid %}
+      <td><input type="checkbox" name="valid_obs" checked></td>
+    {% else %}
+      <td><input type="checkbox" name="valid_obs"></td>
+    {% endif %}
     </tr>
   {% endfor %}
 </table>
 
 
+{% if vehicle_count > 1 %}
+<p>
+  <img src="/session/{{ session_id }}/plot.png" alt="Histogram of observed speeds">
+</p>
+{% endif %}
 <!-- <p>
     <h2>Debug Info</h2>
     <ul>
