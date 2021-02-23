@@ -13,13 +13,17 @@
     <li>Observation Start Time: {{ start_time_local }}</li>
     <li>Distance in Miles: {{ '%0.3f'|format(distance_miles|float) }}</li>
     <li>Elapsed Seconds: {{ '%0.1f'|format(elapsed_seconds|float) }}</li>
+    <li>Miles per Hour: {{ '%0.1f'|format(mph|float) }}</li>
     <li>Speed Limit: {{ '%0.0f'|format(speed_limit_mph|float) }}</li>
     <li>Valid: {{ valid }}</li>
   </ul>
 
+
+
+
 {% if valid %}
 <form action="/observation/{{ observation_id }}?valid_action=False" method="POST">
-  <button type="submit" class="btn btn-warning">Invalidate Observation</button>
+  <button type="submit" class="btn btn-primary">Invalidate Observation</button>
 </form>
 {% else %}
 <form action="/observation/{{ observation_id }}?valid_action=True" method="POST">
@@ -28,5 +32,19 @@
 {% endif %}
 
 
+<!-- 
+<form action="/observation/{{ observation_id }}" method="POST">
 
+<div class="form-check form-switch">
+  {% if valid %}
+  <input type="checkbox" class="form-check-input" name="validationSwitch" id="customSwitch1" value="great" checked>
+  {% else %}
+  <input type="checkbox" class="form-check-input" name="validationSwitch" id="customSwitch1" value="notgreat">
+  {% endif %}
+</div>
+
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+ -->
 {% endblock %}

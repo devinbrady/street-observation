@@ -224,6 +224,7 @@ def create_histogram(session_id):
 def render_observation(observation_id):
 
     if request.method == 'POST':
+
         valid_action = request.args.get('valid_action')
 
         update_query = f'''
@@ -233,8 +234,7 @@ def render_observation(observation_id):
         '''
 
         resp = db.engine.execute(update_query)
-        print(resp)
-
+        # How to confirm this?
 
 
 
@@ -282,6 +282,7 @@ def render_observation(observation_id):
         , start_time_local=this_obs_series['start_time_local']
         , distance_miles=this_obs_series['distance_miles']
         , elapsed_seconds=this_obs_series['elapsed_seconds']
+        , mph=this_obs_series['mph']
         , speed_limit_mph=this_obs_series['speed_limit_mph']
         , valid=this_obs_series['valid']
         )

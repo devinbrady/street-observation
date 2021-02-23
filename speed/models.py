@@ -25,6 +25,7 @@ class ObservationSession(db.Model):
     # local timezone
     # location address
     # location lat lon
+    # publish
 
     def __init__(self, session_id, session_mode, full_name=None, email=None, speed_limit_mph=None, distance_miles=None):
 
