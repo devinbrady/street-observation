@@ -29,15 +29,102 @@ def page_not_found(e):
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
-@app.route('/', methods = ['GET'])
+@app.route('/', methods=['GET'])
 def display_index():
     return render_template('index.html')
 
-@app.route('/begin_solo', methods = ['GET'])
+
+@app.route('/session_list', methods=['GET'])
+def list_sessions():
+    sessions = pd.read_sql(
+        f'''
+        select
+        s.session_id
+        , min(o.start_time) as first_start
+        , count(o.*) as num_observations
+
+        from observations o
+        inner join sessions s using (session_id)
+
+        where o.valid
+        and o.end_time is not null
+
+        group by s.session_id
+        order by first_start desc
+        '''
+        , db.session.bind
+        )
+
+    sessions['start_timestamp_local'] = (
+        sessions['first_start']
+        .dt.tz_localize('UTC')
+        .dt.tz_convert(local_timezone)
+        .dt.strftime('%Y-%m-%d %l:%M:%S %p')
+        )
+
+
+    return render_template(
+        'session_list.html'
+        , sessions=sessions
+        )
+
+@app.route('/observation_list/<session_id>', methods=['GET'])
+def list_observations(session_id):
+    df = pd.read_sql(
+        f'''
+        select
+        o.start_time
+        , o.end_time
+        , o.elapsed_seconds
+        , o.valid
+        , s.distance_miles
+
+        from observations o
+        inner join sessions s using (session_id)
+
+        where s.session_id = '{session_id}'
+        and o.end_time is not null
+
+        order by o.start_time desc
+        '''
+        , db.session.bind
+        )
+
+
+    vehicle_count = len(df)
+
+    if vehicle_count == 0:
+        max_speed = 0
+        median_speed = 0
+    else:
+
+        df['mph'] = df['distance_miles'] / (df['elapsed_seconds'] / 60 / 60)
+        df['start_time_local'] = (
+            df['start_time']
+            .dt.tz_localize('UTC')
+            .dt.tz_convert(local_timezone)
+            .dt.strftime('%l:%M:%S %p')
+            )
+
+        valid_observations = df[df.valid].copy()
+
+        max_speed = valid_observations.mph.max()
+        median_speed = valid_observations.mph.median()
+
+    return render_template(
+        'observation_list.html'
+        , session_id=session_id
+        , vehicle_count=vehicle_count
+        , max_speed=max_speed
+        , median_speed=median_speed
+        , df=df
+        )
+
+@app.route('/begin_solo', methods=['GET'])
 def display_begin_solo():
     return render_template('begin_solo.html')
 
-@app.route('/begin_solo', methods = ['POST'])
+@app.route('/begin_solo', methods=['POST'])
 def register_solo_session():
     full_name = request.form.get('full_name')
     email = request.form.get('email')
@@ -64,7 +151,7 @@ def register_solo_session():
 
 
 
-@app.route('/session', methods = ['GET'])
+@app.route('/session', methods=['GET'])
 def view_session():
     return render_template('session.html', timer_status='ready_to_start')
 

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Session List{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+  <h2>Session List</h2>
+
+  <table class="table">
+  <thead>
+  <tr>
+    <th scope="col">Session ID</th>
+    <th scope="col">Date and Time</th>
+    <th scope="col">Location</th>
+    <th scope="col">Number of Valid Observations</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for key, row in sessions.iterrows() %}
+    <tr scope="row">
+    <td><a href="observation_list/{{ row.session_id }}">{{ row.session_id }}</a></td>
+    <td>{{ row.start_timestamp_local }}</td>
+    <td> - </td>
+    <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
