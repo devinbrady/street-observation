@@ -26,4 +26,11 @@
   {% endfor %}
 </table>
 
+{% if vehicle_count > 1 %}
+<p>
+  <img src="/session/{{ session_id }}/plot.png" alt="Histogram of observed speeds">
+</p>
+{% endif %}
+
+
 {% endblock %}
