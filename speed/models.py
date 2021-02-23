@@ -46,19 +46,15 @@ class Observation(db.Model):
     # observer_a_lon
     # observer_b_lat
     # observer_b_lon
-    distance_miles = db.Column(db.Float)
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
     elapsed_seconds = db.Column(db.Float)
-    mph = db.Column(db.Float)
 
 
-    def __init__(self, observation_id, session_id, distance_miles=None, start_time=None, end_time=None, elapsed_seconds=None, mph=None):
+    def __init__(self, observation_id, session_id, start_time=None, end_time=None, elapsed_seconds=None):
 
         self.observation_id = observation_id
         self.session_id = session_id
-        self.distance_miles = distance_miles
         self.start_time = start_time
         self.end_time = end_time
         self.elapsed_seconds = elapsed_seconds
-        self.mph = mph

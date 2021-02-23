@@ -18,7 +18,12 @@
       </form>
   {% endif %}
 
-
+  <h2>Stats</h2>
+  <ul>
+    <li>Vehicle Count: {{ vehicle_count }}</li>
+    <li>Max Speed: {{ '%0.1f'|format(max_speed|float) }}</li>
+    <li>Median Speed: {{ '%0.1f'|format(median_speed|float) }}</li>
+  </ul>
 
   <h2>Observed Vehicles</h2>
   <table class="table">

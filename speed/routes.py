@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from dateutil import tz
 from datetime import datetime
 
@@ -39,7 +40,15 @@ def register_solo_session():
     db.session.add(solo_session)
     db.session.commit()
 
-    return render_template('session.html', timer_status='ready_to_start', session_id=session_id, distance_miles=distance_miles)
+    return render_template(
+        'session.html'
+        , timer_status='ready_to_start'
+        , session_id=session_id
+        , distance_miles=distance_miles
+        , vehicle_count=0
+        , max_speed=None
+        , median_speed=None
+        )
 
 
 
@@ -96,6 +105,7 @@ def post_time():
             timer_status = 'ready_to_start'
     
 
+    # SQLAlchemy way
     observations = (
         db.session
         .query(models.Observation)
@@ -107,6 +117,7 @@ def post_time():
         .all()
         )
 
+
     for o in observations:
         local_ts = (
             o.start_time
@@ -115,15 +126,46 @@ def post_time():
             )
 
         o.start_time_local = local_ts.strftime('%l:%M:%S %p')
-    # .replace(tzinfo=from_zone)
 
+
+    # Pandas way
+    df = pd.read_sql(
+        db.session
+        .query(models.Observation)
+        .filter(
+            models.Observation.session_id == session_id
+            , models.Observation.end_time != None
+            )
+        .order_by(models.Observation.start_time.desc())
+        .statement
+        , db.session.bind
+        )
+
+    vehicle_count = len(df)
+
+    if vehicle_count == 0:
+        max_speed = 0
+        median_speed = 0
+    else:
+        max_speed = df.mph.max()
+        median_speed = df.mph.median()
+
+        df['start_time_local'] = (
+            df['start_time']
+            .dt.tz_localize('UTC')
+            .dt.tz_convert(local_timezone)
+            .dt.strftime('%l:%M:%S %p')
+            )
+    
     return render_template(
         'session.html'
         , session_id=session_id
         , observation_id=observation_id
         , timer_status=timer_status
+        , vehicle_count=vehicle_count
+        , max_speed=max_speed
+        , median_speed=median_speed
         , distance_miles=distance_miles
         , elapsed_seconds=elapsed_seconds
-        , mph=mph
         , observations=observations
         )
