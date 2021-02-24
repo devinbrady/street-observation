@@ -26,6 +26,7 @@ class ObservationSession(db.Model):
     # location address
     # location lat lon
     # publish
+    # description
 
     def __init__(self, session_id, session_mode, full_name=None, email=None, speed_limit_mph=None, distance_miles=None):
 
@@ -57,6 +58,7 @@ class Observation(db.Model):
     elapsed_seconds = db.Column(db.Float)
 
     # updated_at
+    # description
 
 
     def __init__(self, observation_id, session_id, valid=True, start_time=None, end_time=None, elapsed_seconds=None):

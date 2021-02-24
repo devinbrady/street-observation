@@ -4,7 +4,7 @@ from dateutil import tz
 from datetime import datetime
 
 from flask import current_app as app
-from flask import request, render_template, send_from_directory, Response
+from flask import session, redirect, url_for, request, render_template, send_from_directory, Response
 
 
 import io
@@ -20,6 +20,7 @@ from . import db
 local_timezone = 'America/New_York'
 
 
+@app.errorhandler(404)
 @app.errorhandler(500)
 def page_not_found(e):
     # note that we set the 404 status explicitly
@@ -70,10 +71,13 @@ def list_sessions():
 
 @app.route('/observation_list/<session_id>', methods=['GET'])
 def list_observations(session_id):
+
+
     df = pd.read_sql(
         f'''
         select
-        o.start_time
+        o.observation_id
+        , o.start_time
         , o.end_time
         , o.elapsed_seconds
         , o.valid
@@ -90,10 +94,9 @@ def list_observations(session_id):
         , db.session.bind
         )
 
+    observation_count = len(df)
 
-    vehicle_count = len(df)
-
-    if vehicle_count == 0:
+    if observation_count == 0:
         max_speed = 0
         median_speed = 0
     else:
@@ -107,7 +110,7 @@ def list_observations(session_id):
             )
 
         valid_observations = df[df.valid].copy()
-
+        vehicle_count = len(valid_observations)
         max_speed = valid_observations.mph.max()
         median_speed = valid_observations.mph.median()
 
@@ -119,6 +122,14 @@ def list_observations(session_id):
         , median_speed=median_speed
         , df=df
         )
+
+@app.route('/observation_list/<session_id>/<observation_id>', methods=['POST'])
+def toggle_valid_on_list(session_id, observation_id):    
+    valid_action = request.args.get('valid_action')
+    toggle_valid(observation_id, valid_action)
+
+    return list_observations(session_id)
+
 
 @app.route('/begin_solo', methods=['GET'])
 def display_begin_solo():
@@ -165,6 +176,11 @@ def post_time():
     observation_id = request.args.get('observation_id', default=None, type=str)
     distance_miles = request.args.get('distance_miles', default=None, type=str)
     
+
+    # print("browser time: ")
+    # print(request.args.get("time"))
+    # print("server time : ")
+    # print(datetime.utcnow().strftime('%A %B, %d %Y %H:%M:%S'))
     
     if timer_type:
 
@@ -297,10 +313,12 @@ def create_histogram(session_id):
     session_observations['mph'] = session_observations['distance_miles'] / (session_observations['elapsed_seconds'] / 60 / 60)
 
     fig = Figure()
+    fig.set_size_inches(5, 4)
     axis = fig.add_subplot(1, 1, 1)
     axis.hist(session_observations['mph'])
 
     axis.yaxis.set_major_locator(MaxNLocator(integer=True))
+    axis.set_title('Histogram of Observed Speeds')
     axis.set_ylabel('Count of Vehicles')
     axis.set_xlabel('MPH')
 
@@ -308,21 +326,12 @@ def create_histogram(session_id):
 
 
 @app.route('/observation/<observation_id>', methods=['GET', 'POST'])
-def render_observation(observation_id):
+def one_observation(observation_id):
 
     if request.method == 'POST':
 
         valid_action = request.args.get('valid_action')
-
-        update_query = f'''
-            update observations
-            set valid = {valid_action}
-            where observation_id = '{observation_id}'
-        '''
-
-        resp = db.engine.execute(update_query)
-        # How to confirm this?
-
+        toggle_valid(observation_id, valid_action)
 
 
     this_obs = pd.read_sql(
@@ -373,3 +382,19 @@ def render_observation(observation_id):
         , speed_limit_mph=this_obs_series['speed_limit_mph']
         , valid=this_obs_series['valid']
         )
+
+
+
+def toggle_valid(observation_id, valid_action):
+    """
+    Change the validation status of a single observation in the database
+    """
+
+    update_query = f'''
+        update observations
+        set valid = {valid_action}
+        where observation_id = '{observation_id}'
+    '''
+
+    resp = db.engine.execute(update_query)
+    # How to confirm this?

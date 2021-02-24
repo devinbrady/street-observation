@@ -5,6 +5,14 @@
 {% endblock %}
 {% block content %}
 
+  <h2>Stats</h2>
+  <ul>
+    <li>Vehicle Count: {{ vehicle_count }}</li>
+    <li>Max Speed: {{ '%0.1f'|format(max_speed|float) }}</li>
+    <li>Median Speed: {{ '%0.1f'|format(median_speed|float) }}</li>
+  </ul>
+
+
 <h2>Observed Vehicles</h2>
   <table class="table">
   <thead>
@@ -18,17 +26,33 @@
   <tbody>
   {% for key,obs in df.iterrows() %}
     <tr scope="row">
-    <td>{{ obs.start_time_local }}</td>
+    <td><a href="/observation/{{ obs.observation_id }}">{{ obs.start_time_local }}</a></td>
     <td>{{ '%0.2f'|format(obs.elapsed_seconds|float) }}</td>
     <td>{{ '%0.1f'|format(obs.mph|float) }}</td>
+
+    <td>
     {% if obs.valid %}
-      <td><input type="checkbox" name="valid_obs" checked></td>
+    <form action="/observation_list/{{ session_id }}/{{ obs.observation_id }}?valid_action=False" method="POST">
+      <button type="submit" class="btn btn-primary">Valid</button>
+    </form>
     {% else %}
-      <td><input type="checkbox" name="valid_obs"></td>
+    <form action="/observation_list/{{ session_id }}/{{ obs.observation_id }}?valid_action=True" method="POST">
+      <button type="submit" class="btn btn-outline-primary">Invalid</button>
+    </form>
     {% endif %}
+    </td>
+
     </tr>
   {% endfor %}
 </table>
+
+<p>
+{% if vehicle_count > 1 %}
+  <img src="/session/{{ session_id }}/plot.png" alt="Histogram of observed speeds">
+{% else %}
+    When there are at least 2 observations in a session, a histogram will be plotted here. 
+{% endif %}
+</p>
 
 <p><a href="/session_list">Session List</a></p>
 

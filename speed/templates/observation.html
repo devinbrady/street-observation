@@ -8,7 +8,7 @@
 
   <ul>
     <li>Observation ID: {{ observation_id }}</li>
-    <li>Session ID: {{ session_id }}</li>
+    <li>Session ID: <a href="/observation_list/{{ session_id }}">{{ session_id }}</a></li>
     <li>Observation Start Date: {{ start_date_local }}</li>
     <li>Observation Start Time: {{ start_time_local }}</li>
     <li>Distance in Miles: {{ '%0.3f'|format(distance_miles|float) }}</li>
@@ -20,16 +20,18 @@
 
 
 
+    {% if valid %}
+    <form action="/observation/{{ observation_id }}?valid_action=False" method="POST">
+      <button type="submit" class="btn btn-primary">Valid</button>
+    </form>
+    {% else %}
+    <form action="/observation/{{ observation_id }}?valid_action=True" method="POST">
+      <button type="submit" class="btn btn-outline-primary">Invalid</button>
+    </form>
+    {% endif %}
 
-{% if valid %}
-<form action="/observation/{{ observation_id }}?valid_action=False" method="POST">
-  <button type="submit" class="btn btn-primary">Invalidate Observation</button>
-</form>
-{% else %}
-<form action="/observation/{{ observation_id }}?valid_action=True" method="POST">
-  <button type="submit" class="btn btn-primary">Validate Observation</button>
-</form>
-{% endif %}
+
+
 
 
 <!-- 
