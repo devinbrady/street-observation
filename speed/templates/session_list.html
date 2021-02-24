@@ -12,15 +12,17 @@
     <th scope="col">Session ID</th>
     <th scope="col">Date and Time</th>
     <th scope="col">Location</th>
+    <th scope="col">Distance</th>
     <th scope="col">Number of Valid Observations</th>
   </tr>
   </thead>
   <tbody>
-  {% for key, row in sessions.iterrows() %}
+  {% for _, row in sessions.iterrows() %}
     <tr scope="row">
-    <td><a href="observation_list/{{ row.session_id }}">{{ row.session_id }}</a></td>
+    <td><a href="/session/{{ row.session_id }}">{{ row.session_id }}</a></td>
     <td>{{ row.start_timestamp_local }}</td>
     <td> - </td>
+    <td> {{ row.distance_miles }} </td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
     </tr>
   {% endfor %}
