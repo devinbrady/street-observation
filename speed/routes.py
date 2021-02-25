@@ -24,7 +24,7 @@ local_timezone = 'America/New_York'
 
 
 @app.route('/session_settings', methods=['GET', 'POST'])
-def register_new_session():
+def edit_session_settings():
     """
     Receive information about each session
     """
@@ -103,7 +103,8 @@ def register_new_session():
                 where session_id = :session_id
                 ''')
 
-            result = db.engine.execute(t
+            result = db.engine.execute(
+                t
                 , session_id=session_id
                 , full_name=form.full_name.data
                 , email=form.email.data
@@ -119,40 +120,6 @@ def register_new_session():
         , form=form
         , session_id=session_id
         )
-
-
-# @app.route('/session_settings/<session_id>', methods=['GET', 'POST'])
-# def edit_existing_session(session_id):
-
-#     query = f'''
-#         select
-#         full_name
-#         , email
-#         , speed_limit_mph
-#         , distance_miles
-
-#         from sessions
-#         where session_id = '{session_id}'
-#     '''
-
-#     settings_df = pd.read_sql(query, db.session.bind)
-#     settings = settings_df.squeeze()
-
-#     form = SessionSettingsForm(
-#         full_name=settings['full_name']
-#         , email=settings['email']
-#         , speed_limit_mph=settings['speed_limit_mph']
-#         , distance_miles=settings['distance_miles']
-#         )
-
-#     if form.validate_on_submit():
-#         redirect('edit_existing_session')
-
-#     return render_template(
-#         'session_settings.html'
-#         , form=form
-#         )
-
 
 
 
@@ -204,61 +171,6 @@ def list_sessions():
         'session_list.html'
         , sessions=sessions
         )
-
-
-
-# @app.route('/session_settings/<session_id>', methods=['GET'])
-# def display_session_settings(session_id):
-#     """
-#     Show settings for an existing session
-#     """
-
-#     query = f'''
-#         select
-#         full_name
-#         , email
-#         , speed_limit_mph
-#         , distance_miles
-
-#         from sessions
-#         where session_id = '{session_id}'
-#     '''
-
-#     settings = pd.read_sql(query, db.session.bind)
-#     this_settings = settings.squeeze()
-
-#     return render_template(
-#         'session_settings.html'
-#         , full_name=this_settings['full_name']
-#         , email=this_settings['email']
-#         , speed_limit_mph=this_settings['speed_limit_mph']
-#         , distance_miles=this_settings['distance_miles']
-#         )
-
-
-
-# @app.route('/session_settings_update/<session_id>', methods=['POST'])
-# def edit_session(session_id):
-#     """
-#     Edit an existing session
-#     """
-
-#     full_name = request.form.get('full_name')
-#     email = request.form.get('email')
-#     speed_limit_mph = request.form.get('speed_limit_mph')
-#     distance_miles = request.form.get('distance_miles')
-
-#     query = f'''
-#         update sessions
-#         set 
-#             distance_miles = {distance_miles}
-#             , speed_limit_mph = {speed_limit_mph}
-#         where session_id = '{session_id}'
-#     '''
-#     resp = db.engine.execute(update_query)
-
-#     return session_handler(session_id)
-
 
 
 
@@ -448,10 +360,8 @@ def one_observation(observation_id):
     """
 
     if request.method == 'POST':
-
         valid_action = request.args.get('valid_action')
         toggle_valid(observation_id, valid_action)
-
 
     this_obs = pd.read_sql(
         f'''
@@ -509,11 +419,15 @@ def toggle_valid(observation_id, valid_action):
     Change the validation status of a single observation in the database
     """
 
-    update_query = f'''
+    update_query = text('''
         update observations
-        set valid = {valid_action}
-        where observation_id = '{observation_id}'
-    '''
+        set valid = :valid_action
+        where observation_id = :observation_id
+    ''')
 
-    resp = db.engine.execute(update_query)
+    result = db.engine.execute(
+        update_query
+        , valid_action=valid_action
+        , observation_id=observation_id
+        )
     # How to confirm this?
