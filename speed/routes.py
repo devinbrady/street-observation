@@ -173,19 +173,27 @@ def list_sessions():
         )
 
 
+@app.route('/just_time', methods=['GET'])
+def just_time():    
+    return render_template('just_time.html')    
+
+
+@app.route('/getTime', methods=['GET'])
+def getTime():
+    print("browser time: ")
+    print(request.args.get("browser_time"))
+    print("server time : ")
+    print(datetime.utcnow().strftime('%A %B, %d %Y %H:%M:%S'))
+    return "Done"
+
+
 
 @app.route('/session/<session_id>', methods=['GET', 'POST'])
 def session_handler(session_id):
 
     timer_type = request.args.get('timer', default=None, type=str)
     active_observation_id = request.args.get('active_observation_id', default=None, type=str)
-    
 
-    # print("browser time: ")
-    # print(request.args.get("time"))
-    # print("server time : ")
-    # print(datetime.utcnow().strftime('%A %B, %d %Y %H:%M:%S'))
-    
     if timer_type:
 
         utc_time = datetime.utcnow()

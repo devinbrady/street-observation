@@ -5,24 +5,12 @@
 {% endblock %}
 {% block content %}
 
-<!-- <script> 
-function sendTimeToServer(){
-    var time = new Date();
-    var i = document.createElement("img");
-    i.src = "/getTime?time=" + time;
-    document.getElementById("time").innerHTML = time;
-}
-</script>
-<form action="session?timecheck=True" method="POST">
-<button onclick="sendTimeToServer()">update time</button>
-<div id="time">Time: </div>
- -->
   <h2>Session</h2>
 
   {% if timer_status == 'ready_to_start' %}
       <form action="/session/{{ session_id }}?&timer=start" method="POST">
       <button type="submit" class="btn btn-success btn-lg">Start Timer</button>
-      </form>  
+      </form>
   {% endif %}
 
   {% if timer_status == 'vehicle_in_timer' %}
@@ -36,7 +24,6 @@ function sendTimeToServer(){
       <button type="submit" class="btn btn-outline-primary btn-lg">Return to Timer</button>
       </form>
   {% endif %}
-
 
   <h2>Stats</h2>
   <ul>
