@@ -46,7 +46,8 @@ function sendTimeToServer(){
     <li>Speed Limit: {{ '{}'.format(speed_limit_mph) }}</li>
     <li>Distance in Miles: {{ '{}'.format(distance_miles) }}</li>
   </ul>
-  <!-- <p><a href='/session_settings/{{ session_id }}'>Edit session</a></p> -->
+
+  <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
 
 
 <h2>Observed Vehicles</h2>

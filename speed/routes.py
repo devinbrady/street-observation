@@ -15,9 +15,145 @@ from matplotlib.ticker import MaxNLocator
 
 from . import models
 from . import db
+from .forms import SessionSettingsForm
+
+from sqlalchemy import text
 
 
 local_timezone = 'America/New_York'
+
+
+@app.route('/session_settings', methods=['GET', 'POST'])
+def register_new_session():
+    """
+    Receive information about each session
+    """
+
+    session_id = request.args.get('session_id')
+    if not session_id:
+        session_id = 'new_session'
+
+
+    if session_id == 'new_session':
+        # New session
+
+        form = SessionSettingsForm(
+            speed_limit_mph=20
+            , distance_miles=0.01
+            )
+    
+        if form.validate_on_submit():
+
+            session_id = models.generate_uuid()
+            session_mode = 'solo'
+
+            solo_session = models.ObservationSession(
+                session_id
+                , session_mode
+                , form.full_name.data
+                , form.email.data
+                , form.speed_limit_mph.data
+                , form.distance_miles.data
+                )
+            db.session.add(solo_session)
+            db.session.commit()
+
+            return render_template(
+                'session.html'
+                , timer_status='ready_to_start'
+                , session_id=session_id
+                , vehicle_count=0
+                , max_speed=0
+                , median_speed=0
+                , df=pd.DataFrame()
+                )
+
+    else:
+        # Existing session
+        query = f'''
+            select
+            full_name
+            , email
+            , speed_limit_mph
+            , distance_miles
+
+            from sessions
+            where session_id = '{session_id}'
+        '''
+
+        settings_df = pd.read_sql(query, db.session.bind)
+        settings = settings_df.squeeze()
+
+        form = SessionSettingsForm(
+            full_name=settings['full_name']
+            , email=settings['email']
+            , speed_limit_mph=settings['speed_limit_mph']
+            , distance_miles=settings['distance_miles']
+            )
+
+        if form.validate_on_submit():
+            t = text('''
+                update sessions
+                set 
+                    full_name = :full_name
+                    , email = :email
+                    , distance_miles = :distance_miles
+                    , speed_limit_mph = :speed_limit_mph
+
+                where session_id = :session_id
+                ''')
+
+            result = db.engine.execute(t
+                , session_id=session_id
+                , full_name=form.full_name.data
+                , email=form.email.data
+                , distance_miles=form.distance_miles.data
+                , speed_limit_mph=form.speed_limit_mph.data
+                )
+
+            return session_handler(session_id)
+
+    
+    return render_template(
+        'session_settings.html'
+        , form=form
+        , session_id=session_id
+        )
+
+
+# @app.route('/session_settings/<session_id>', methods=['GET', 'POST'])
+# def edit_existing_session(session_id):
+
+#     query = f'''
+#         select
+#         full_name
+#         , email
+#         , speed_limit_mph
+#         , distance_miles
+
+#         from sessions
+#         where session_id = '{session_id}'
+#     '''
+
+#     settings_df = pd.read_sql(query, db.session.bind)
+#     settings = settings_df.squeeze()
+
+#     form = SessionSettingsForm(
+#         full_name=settings['full_name']
+#         , email=settings['email']
+#         , speed_limit_mph=settings['speed_limit_mph']
+#         , distance_miles=settings['distance_miles']
+#         )
+
+#     if form.validate_on_submit():
+#         redirect('edit_existing_session')
+
+#     return render_template(
+#         'session_settings.html'
+#         , form=form
+#         )
+
+
 
 
 @app.errorhandler(404)
@@ -67,49 +203,6 @@ def list_sessions():
     return render_template(
         'session_list.html'
         , sessions=sessions
-        )
-
-
-
-@app.route('/session_settings', methods=['GET'])
-def new_session_settings():
-    """
-    Display a blank form for a new session
-    """
-    return render_template(
-        'session_settings.html'
-        , full_name='Name'
-        , email='Email'
-        , speed_limit_mph=20
-        , distance_miles=0.01
-        )
-
-
-
-@app.route('/session_settings', methods=['POST'])
-def register_session():
-    full_name = request.form.get('full_name')
-    email = request.form.get('email')
-    speed_limit_mph = request.form.get('speed_limit_mph')
-    distance_miles = request.form.get('distance_miles')
-
-    session_id = models.generate_uuid()
-    session_mode = 'solo'
-
-    solo_session = models.ObservationSession(session_id, session_mode, full_name, email, speed_limit_mph, distance_miles)
-    db.session.add(solo_session)
-    db.session.commit()
-
-    return render_template(
-        'session.html'
-        , timer_status='ready_to_start'
-        , session_id=session_id
-        , distance_miles=distance_miles
-        , vehicle_count=0
-        , max_speed=0
-        , median_speed=0
-        , speed_limit_mph=speed_limit_mph
-        , df=pd.DataFrame()
         )
 
 
