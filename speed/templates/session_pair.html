@@ -29,22 +29,35 @@ $(document).ready(function(){
             btn.innerHTML = "Start Timer";
 
             socket.emit('broadcast end', {'session_id': session_id, 'active_observation_id': active_observation_id})
-
-            active_observation_id = 'no_active_obs'
         }
       
     });
 
-    // $('.timer_button').click(function() {
-    //     // socket.emit('broadcast end', { session_id: '0ea3af29-5120-4758-a247-c2acbf29928c', active_observation_id: active_observation_id});
-    //     var btn = document.getElementById("myButton");
-    //     btn.innerHTML = 'Start Timer';
-
-    // });
 
     socket.on('new observation id', function(msg) {
       active_observation_id = msg['active_observation_id'];
+      
+      var btn = document.getElementById("myButton");
+
+      if (btn.value == "Start Timer") {
+          btn.value = "End Timer";
+          btn.innerHTML = "End Timer";
+      }
+
     });
+
+    socket.on('observation concluded', function(msg) {
+      active_observation_id = 'no_active_obs';
+
+      var btn = document.getElementById("myButton");
+
+      if (btn.value == "End Timer") {
+          btn.value = "Start Timer";
+          btn.innerHTML = "Start Timer";
+      }
+
+    });
+
 
 });
 </script>

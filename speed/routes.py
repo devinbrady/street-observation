@@ -281,6 +281,10 @@ def broadcast_end(message):
         })
     db.session.commit()
 
+    emit(
+        'observation concluded'
+        , broadcast=True
+        )
 
 
 
