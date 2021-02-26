@@ -1,6 +1,6 @@
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextField, IntegerField, DecimalField, SubmitField
+from wtforms import SelectField, StringField, TextField, IntegerField, DecimalField, SubmitField
 from wtforms.validators import DataRequired, Length, Email
 
 
@@ -8,6 +8,13 @@ class SessionSettingsForm(FlaskForm):
     """
     Form to collect information about a session
     """
+
+    session_mode = SelectField(
+        'Session Mode'
+        # , [DataRequired()]
+        , choices=['solo', 'pair']
+        , render_kw={'class': 'form-control'}
+    )
 
     full_name = StringField(
         'Name'
