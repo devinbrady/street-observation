@@ -20,6 +20,8 @@ $(document).ready(function(){
         if (btn.value == "Start Timer") {
             btn.value = "End Timer";
             btn.innerHTML = "End Timer";
+            btn.classList.remove('btn-success')
+            btn.classList.add('btn-danger')
 
             socket.emit('broadcast start', {'session_id': session_id, 'active_observation_id': active_observation_id})
         }
@@ -27,6 +29,8 @@ $(document).ready(function(){
         else {
             btn.value = "Start Timer";
             btn.innerHTML = "Start Timer";
+            btn.classList.remove('btn-danger')
+            btn.classList.add('btn-success')
 
             socket.emit('broadcast end', {'session_id': session_id, 'active_observation_id': active_observation_id})
         }
@@ -36,12 +40,15 @@ $(document).ready(function(){
 
     socket.on('new observation id', function(msg) {
       active_observation_id = msg['active_observation_id'];
-      
+
       var btn = document.getElementById("myButton");
 
       if (btn.value == "Start Timer") {
           btn.value = "End Timer";
           btn.innerHTML = "End Timer";
+          btn.classList.remove('btn-success')
+          btn.classList.add('btn-danger')
+
       }
 
     });
@@ -54,7 +61,11 @@ $(document).ready(function(){
       if (btn.value == "End Timer") {
           btn.value = "Start Timer";
           btn.innerHTML = "Start Timer";
+          btn.classList.remove('btn-danger')
+          btn.classList.add('btn-success')
       }
+
+      location.reload();
 
     });
 
@@ -65,43 +76,8 @@ $(document).ready(function(){
 
   <h2>Session</h2>
 
-<!-- <button type="button" class="btn btn-success" id="timer_button">Start Timer</button> -->
+<button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
 
-<button id="myButton" class="timer_button" value="Start Timer">Start Timer</button>
-
-
-<!-- <button type="button" class="timer_start btn btn-success" id="timer_start">Start Timer</button> -->
-<!-- <button type="button" class="timer_end btn btn-danger" id="timer_end">End Timer</button> -->
-
-
-<!--     <form id="timer_button" method="POST" action='#'>
-        <input type="submit" value="Start Timer">
-    </form>
- -->
-<!--     <form id="broadcast_end" method="POST" action='#'>
-        <input type="submit" value="End Timer">
-    </form>
- -->
-<!-- 
-
-  {% if timer_status == 'ready_to_start' %}
-      <form action="/session/{{ session_id }}?&timer=start" method="POST">
-      <button type="submit" class="btn btn-success btn-lg">Start Timer</button>
-      </form>
-  {% endif %}
-
-  {% if timer_status == 'vehicle_in_timer' %}
-      <form action="/session/{{ session_id }}?&timer=end&active_observation_id={{ active_observation_id }}" method="POST">
-      <button type="submit" class="btn btn-danger btn-lg">End Timer</button>
-      </form>
-  {% endif %}
-
-  {% if timer_status == 'timer_off' %}
-      <form action="/session/{{ session_id }}?&timer=ready" method="POST">
-      <button type="submit" class="btn btn-outline-primary btn-lg">Return to Timer</button>
-      </form>
-  {% endif %}
- -->
   <h2>Stats</h2>
   <ul>
     <li>Vehicle Count: {{ vehicle_count }}</li>
@@ -154,17 +130,6 @@ $(document).ready(function(){
     When there are at least 2 observations in a session, a histogram will be plotted here. 
 {% endif %}
 </p>
-
-<!-- <p>
-    <h2>Debug Info</h2>
-    <ul>
-        <li>session_id = {{ session_id }}</li>
-        <li>distance_miles = {{ distance_miles }}</li>
-        <li>timer_status = {{ timer_status }}</li>
-    </ul>
-</p>
-
- -->
 
 <p><a href='/session_settings'>Start a new session</a></p>
 
