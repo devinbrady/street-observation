@@ -1,27 +1,37 @@
+import io
 import os
 import pandas as pd
 from dateutil import tz
 from datetime import datetime
 
+from sqlalchemy import text
+from flask_socketio import emit
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response
 
-import io
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
-
 
 from . import models
 from . import db, socketio
 from .forms import SessionSettingsForm
 
-from sqlalchemy import text
-
-from flask_socketio import emit
-
 
 local_timezone = 'America/New_York'
+
+@app.errorhandler(404)
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template('problem.html', e=e), e.code
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
+
+@app.route('/', methods=['GET'])
+def display_index():
+    return render_template('index.html')
 
 
 
@@ -119,20 +129,6 @@ def edit_session_settings():
         , session_id=session_id
         )
 
-
-
-@app.errorhandler(404)
-@app.errorhandler(500)
-def page_not_found(e):
-    return render_template('problem.html', e=e), e.code
-
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
-
-@app.route('/', methods=['GET'])
-def display_index():
-    return render_template('index.html')
 
 
 @app.route('/session_list', methods=['GET'])
