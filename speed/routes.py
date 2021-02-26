@@ -95,15 +95,7 @@ def edit_session_settings():
             db.session.add(new_session)
             db.session.commit()
 
-            return render_template(
-                'session.html'
-                , timer_status='ready_to_start'
-                , session_id=session_id
-                , vehicle_count=0
-                , max_speed=0
-                , median_speed=0
-                , df=pd.DataFrame()
-                )
+            return redirect(f'session_pair?session_id={session_id}')
 
     else:
         # Existing session
@@ -153,7 +145,7 @@ def edit_session_settings():
                 , session_mode=form.session_mode.data
                 )
 
-            return session_handler(session_id)
+            return redirect(f'session_pair?session_id={session_id}')
 
     
     return render_template(
@@ -288,11 +280,10 @@ def broadcast_end(message):
 
 
 
-@app.route('/session_pair/<session_id>', methods=['GET', 'POST'])
-def session_pair_handler(session_id):
+@app.route('/session_pair', methods=['GET', 'POST'])
+def session_pair_handler():
 
-    session_id = '0ea3af29-5120-4758-a247-c2acbf29928c'
-
+    session_id = request.args.get('session_id')
 
     observations = pd.read_sql(
         f'''
