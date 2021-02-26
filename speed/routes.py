@@ -33,6 +33,12 @@ local_timezone = 'America/New_York'
 def get_socket():
     return render_template('socket.html')
 
+
+@socketio.on('click')
+def click_me(message):
+    print('click:')
+    print(message)
+
 @socketio.on('my event')
 def test_message(message):
     print('test_message, my event')
@@ -229,25 +235,24 @@ def broadcast_start(message):
     """
     A new observation has been initiated
     """
-    session_id = message['session_id']
+    print('broadcast start')
+    print(message)
 
-    utc_time = datetime.utcnow()
+    # session_id = message['session_id']
+
+    # utc_time = datetime.utcnow()
 
     active_observation_id = models.generate_uuid()
-    obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time)
+    # obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time)
 
-    db.session.add(obs)
-    db.session.commit()
+    # db.session.add(obs)
+    # db.session.commit()
 
-    timer_status = 'vehicle_in_timer'
+    # timer_status = 'vehicle_in_timer'
 
     emit(
-        'broadcast start with observation'
-        , {
-            'session_id': session_id
-            , 'active_observation_id': active_observation_id
-            , 'timer_status': timer_status
-            }
+        'new observation id'
+        , {'active_observation_id': active_observation_id}
         , broadcast=True
         )
 
@@ -258,25 +263,28 @@ def broadcast_end(message):
     """
     The timer has ended for an observation
     """
-    session_id = message['session_id']
-    active_observation_id = message['active_observation_id']
+    print('broadcast end')
+    print(message)
 
-    utc_time = datetime.utcnow()
+    # session_id = message['session_id']
+    # active_observation_id = message['active_observation_id']
 
-    this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
+    # utc_time = datetime.utcnow()
+
+    # this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
     
-    # Calculate time
-    elapsed_td = utc_time - this_obs.scalar().start_time
-    elapsed_seconds = elapsed_td.total_seconds()
+    # # Calculate time
+    # elapsed_td = utc_time - this_obs.scalar().start_time
+    # elapsed_seconds = elapsed_td.total_seconds()
     
-    this_obs.update({
-        models.Observation.end_time: utc_time
-        , models.Observation.elapsed_seconds: elapsed_seconds
-        })
-    db.session.commit()
+    # this_obs.update({
+    #     models.Observation.end_time: utc_time
+    #     , models.Observation.elapsed_seconds: elapsed_seconds
+    #     })
+    # db.session.commit()
 
-    active_observation_id = None
-    timer_status = 'ready_to_start'
+    # active_observation_id = None
+    # timer_status = 'ready_to_start'
 
 
 

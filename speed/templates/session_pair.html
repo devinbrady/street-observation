@@ -10,43 +10,62 @@
 <script>
 $(document).ready(function(){
     var socket = io();
-    socket.on('my response', function(msg) {
-        $('#log').append('<p>Received: ' + msg.timer_status + ' active obs: ' + msg.active_observation_id + '</p>');
-    });
-    $('form#emit').submit(function(event) {
-        socket.emit('my event', {data: $('#emit_data').val()});
-        return false;
-    });
-    $('form#broadcast_start').submit(function(event) {
-        socket.emit('broadcast start', { session_id: '0ea3af29-5120-4758-a247-c2acbf29928c'});
-        return false;
+    var session_id = '0ea3af29-5120-4758-a247-c2acbf29928c'
+    var active_observation_id = 'no_active_obs'
+
+    $('.timer_button').click(function() {
+
+        var btn = document.getElementById("myButton");
+        if (btn.value == "Start Timer") {
+            btn.value = "End Timer";
+            btn.innerHTML = "End Timer";
+
+            socket.emit('broadcast start', {'session_id': session_id, 'active_observation_id': active_observation_id})
+        }
+        else {
+            btn.value = "Start Timer";
+            btn.innerHTML = "Start Timer";
+
+            socket.emit('broadcast end', {'session_id': session_id, 'active_observation_id': active_observation_id})
+        }
+      
     });
 
-    socket.on('broadcast start with observation', ({session_id, active_observation_id, timer_status}) => { 
-    
-      $('form#broadcast_end').submit(function(event) {
-          socket.emit('broadcast end', { session_id: '0ea3af29-5120-4758-a247-c2acbf29928c', active_observation_id: active_observation_id});
-          return false;
-        });
+    // $('.timer_button').click(function() {
+    //     // socket.emit('broadcast end', { session_id: '0ea3af29-5120-4758-a247-c2acbf29928c', active_observation_id: active_observation_id});
+    //     var btn = document.getElementById("myButton");
+    //     btn.innerHTML = 'Start Timer';
+
+    // });
+
+    socket.on('new observation id', function(msg) {
+      active_observation_id = msg['active_observation_id'];
     });
+
 });
 </script>
 
 
   <h2>Session</h2>
 
-    <form id="broadcast_start" method="POST" action='#'>
+<!-- <button type="button" class="btn btn-success" id="timer_button">Start Timer</button> -->
+
+<button id="myButton" class="timer_button" value="Start Timer">Start Timer</button>
+
+
+<!-- <button type="button" class="timer_start btn btn-success" id="timer_start">Start Timer</button> -->
+<!-- <button type="button" class="timer_end btn btn-danger" id="timer_end">End Timer</button> -->
+
+
+<!--     <form id="timer_button" method="POST" action='#'>
         <input type="submit" value="Start Timer">
     </form>
-
-    <form id="broadcast_end" method="POST" action='#'>
+ -->
+<!--     <form id="broadcast_end" method="POST" action='#'>
         <input type="submit" value="End Timer">
     </form>
-
-
-    <h2>Receive:</h2>
-    <div id="log"></div>
-
+ -->
+<!-- 
 
   {% if timer_status == 'ready_to_start' %}
       <form action="/session/{{ session_id }}?&timer=start" method="POST">
@@ -65,7 +84,7 @@ $(document).ready(function(){
       <button type="submit" class="btn btn-outline-primary btn-lg">Return to Timer</button>
       </form>
   {% endif %}
-
+ -->
   <h2>Stats</h2>
   <ul>
     <li>Vehicle Count: {{ vehicle_count }}</li>
