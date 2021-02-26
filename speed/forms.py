@@ -53,4 +53,6 @@ class SessionSettingsForm(FlaskForm):
     # )
 
     # recaptcha = RecaptchaField()
-    submit = SubmitField('Submit')
+    submit = SubmitField('Submit', render_kw={'class': 'btn btn-primary'})
+
+    # cancel = SubmitField('Cancel', render_kw={'class': 'btn btn-secondary', 'formnovalidate': True})
