@@ -2,28 +2,84 @@
 {% block title %}Session{% endblock %}
 {% block head %}
   {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
 {% endblock %}
 {% block content %}
 
+<script>
+$(document).ready(function(){
+    var socket = io();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const session_id = urlParams.get('session_id');
+
+    var active_observation_id = 'no_active_obs'
+
+    $('.timer_button').click(function() {
+
+        var btn = document.getElementById("myButton");
+
+        if (btn.value == "Start Timer") {
+            btn.value = "End Timer";
+            btn.innerHTML = "End Timer";
+            btn.classList.remove('btn-success')
+            btn.classList.add('btn-danger')
+
+            socket.emit('broadcast start', {'session_id': session_id, 'active_observation_id': active_observation_id})
+        }
+
+        else {
+            btn.value = "Start Timer";
+            btn.innerHTML = "Start Timer";
+            btn.classList.remove('btn-danger')
+            btn.classList.add('btn-success')
+
+            socket.emit('broadcast end', {'session_id': session_id, 'active_observation_id': active_observation_id})
+        }
+      
+    });
+
+
+    socket.on('new observation id', function(msg) {
+      active_observation_id = msg['active_observation_id'];
+
+      var btn = document.getElementById("myButton");
+
+      if (btn.value == "Start Timer") {
+          btn.value = "End Timer";
+          btn.innerHTML = "End Timer";
+          btn.classList.remove('btn-success')
+          btn.classList.add('btn-danger')
+
+      }
+
+    });
+
+    socket.on('observation concluded', function(msg) {
+      active_observation_id = 'no_active_obs';
+
+      var btn = document.getElementById("myButton");
+
+      if (btn.value == "End Timer") {
+          btn.value = "Start Timer";
+          btn.innerHTML = "Start Timer";
+          btn.classList.remove('btn-danger')
+          btn.classList.add('btn-success')
+      }
+
+      location.reload();
+
+    });
+
+
+});
+</script>
+
+
   <h2>Session</h2>
 
-  {% if timer_status == 'ready_to_start' %}
-      <form action="/session/{{ session_id }}?&timer=start" method="POST">
-      <button type="submit" class="btn btn-success btn-lg">Start Timer</button>
-      </form>
-  {% endif %}
-
-  {% if timer_status == 'vehicle_in_timer' %}
-      <form action="/session/{{ session_id }}?&timer=end&active_observation_id={{ active_observation_id }}" method="POST">
-      <button type="submit" class="btn btn-danger btn-lg">End Timer</button>
-      </form>
-  {% endif %}
-
-  {% if timer_status == 'timer_off' %}
-      <form action="/session/{{ session_id }}?&timer=ready" method="POST">
-      <button type="submit" class="btn btn-outline-primary btn-lg">Return to Timer</button>
-      </form>
-  {% endif %}
+<button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
 
   <h2>Stats</h2>
   <ul>
@@ -77,17 +133,6 @@
     When there are at least 2 observations in a session, a histogram will be plotted here. 
 {% endif %}
 </p>
-
-<!-- <p>
-    <h2>Debug Info</h2>
-    <ul>
-        <li>session_id = {{ session_id }}</li>
-        <li>distance_miles = {{ distance_miles }}</li>
-        <li>timer_status = {{ timer_status }}</li>
-    </ul>
-</p>
-
- -->
 
 <p><a href='/session_settings'>Start a new session</a></p>
 

@@ -6,7 +6,6 @@ from datetime import datetime
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response
 
-
 import io
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -19,44 +18,10 @@ from .forms import SessionSettingsForm
 
 from sqlalchemy import text
 
-
 from flask_socketio import emit
 
 
-
-
 local_timezone = 'America/New_York'
-
-
-
-@app.route('/socket')
-def get_socket():
-    return render_template('socket.html')
-
-
-@socketio.on('click')
-def click_me(message):
-    print('click:')
-    print(message)
-
-@socketio.on('my event')
-def test_message(message):
-    print('test_message, my event')
-    print(message['data'])
-    emit('my response', {'data': message['data']})
-
-
-
-# @socketio.on('connect')
-# def test_connect():
-#     print('Client connected')
-#     emit('my response', {'data': 'Connected'})
-
-# @socketio.on('disconnect')
-# def test_disconnect():
-#     print('Client disconnected')
-
-
 
 
 
@@ -95,7 +60,7 @@ def edit_session_settings():
             db.session.add(new_session)
             db.session.commit()
 
-            return redirect(f'session_pair?session_id={session_id}')
+            return redirect(f'session?session_id={session_id}')
 
     else:
         # Existing session
@@ -145,7 +110,7 @@ def edit_session_settings():
                 , session_mode=form.session_mode.data
                 )
 
-            return redirect(f'session_pair?session_id={session_id}')
+            return redirect(f'session?session_id={session_id}')
 
     
     return render_template(
@@ -177,6 +142,7 @@ def list_sessions():
         select
         s.session_id
         , s.distance_miles
+        , s.full_name
         , min(o.start_time) as first_start
         , count(o.*) as num_observations
 
@@ -206,30 +172,12 @@ def list_sessions():
         )
 
 
-@app.route('/just_time', methods=['GET'])
-def just_time():    
-    return render_template('just_time.html')    
-
-
-@app.route('/getTime', methods=['GET'])
-def getTime():
-    print("browser time: ")
-    print(request.args.get("browser_time"))
-    print("server time : ")
-    print(datetime.utcnow().strftime('%A %B, %d %Y %H:%M:%S'))
-    return "Done"
-
-
-# ------------------------------------------------------------------------------------- PAIR
 
 @socketio.on('broadcast start')
 def broadcast_start(message):
     """
     A new observation has been initiated
     """
-    print('broadcast start')
-    print(message)
-
     session_id = message['session_id']
 
     utc_time = datetime.utcnow()
@@ -253,9 +201,6 @@ def broadcast_end(message):
     """
     The timer has ended for an observation
     """
-    print('broadcast end')
-    print(message)
-
     session_id = message['session_id']
     active_observation_id = message['active_observation_id']
 
@@ -280,8 +225,8 @@ def broadcast_end(message):
 
 
 
-@app.route('/session_pair', methods=['GET', 'POST'])
-def session_pair_handler():
+@app.route('/session', methods=['GET', 'POST'])
+def session_handler():
 
     session_id = request.args.get('session_id')
 
@@ -344,121 +289,8 @@ def session_pair_handler():
         speed_limit_mph = observations.speed_limit_mph.median()
 
     return render_template(
-        'session_pair.html'
-        , session_id=session_id
-        , active_observation_id='xxx'
-        , timer_status='ready_to_start'
-        , vehicle_count=vehicle_count
-        , max_speed=max_speed
-        , median_speed=median_speed
-        , speed_limit_mph=speed_limit_mph
-        , distance_miles=distance_miles
-        , df=completed_observations
-        )
-
-# ------------------------------------------------------------------------------------- /PAIR
-
-
-
-
-@app.route('/session/<session_id>', methods=['GET', 'POST'])
-def session_handler(session_id):
-
-    timer_type = request.args.get('timer', default=None, type=str)
-    active_observation_id = request.args.get('active_observation_id', default=None, type=str)
-
-    if timer_type:
-
-        utc_time = datetime.utcnow()
-
-        if timer_type == 'start':
-            active_observation_id = models.generate_uuid()
-            obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time)
-
-            db.session.add(obs)
-            db.session.commit()
-
-            timer_status = 'vehicle_in_timer'
-
-
-        elif timer_type == 'end':
-
-            this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
-            
-            # Calculate time
-            elapsed_td = utc_time - this_obs.scalar().start_time
-            elapsed_seconds = elapsed_td.total_seconds()
-            
-            this_obs.update({
-                models.Observation.end_time: utc_time
-                , models.Observation.elapsed_seconds: elapsed_seconds
-                })
-            db.session.commit()
-
-            active_observation_id = None
-            timer_status = 'ready_to_start'
-
-        elif timer_type == 'ready':
-            timer_status = 'ready_to_start'
-    
-    else:
-        timer_status = 'timer_off'
-
-
-    observations = pd.read_sql(
-        f'''
-        select
-        o.observation_id
-        , o.start_time
-        , o.end_time
-        , o.elapsed_seconds
-        , o.valid
-        , s.distance_miles
-        , s.speed_limit_mph
-
-        from observations o
-        inner join sessions s using (session_id)
-
-        where s.session_id = '{session_id}'
-
-        order by o.start_time desc
-        '''
-        , db.session.bind
-        )
-
-    completed_observations = observations[observations.end_time.notnull()].copy()
-
-    if len(observations) == 1 and len(completed_observations) == 0:
-        # first time through, timer_status = 'vehicle_in_timer'
-
-        vehicle_count = 0
-        max_speed = 0
-        median_speed = 0
-        speed_limit_mph = observations.speed_limit_mph.median()
-        distance_miles = observations.distance_miles.median()
-
-    else:
-
-        completed_observations['mph'] = completed_observations['distance_miles'] / (completed_observations['elapsed_seconds'] / 60 / 60)
-        completed_observations['start_time_local'] = (
-            completed_observations['start_time']
-            .dt.tz_localize('UTC')
-            .dt.tz_convert(local_timezone)
-            .dt.strftime('%l:%M:%S %p')
-            )
-
-        valid_observations = completed_observations[completed_observations.valid].copy()
-        vehicle_count = len(valid_observations)
-        max_speed = valid_observations.mph.max()
-        median_speed = valid_observations.mph.median()
-        distance_miles = observations.distance_miles.median()
-        speed_limit_mph = observations.speed_limit_mph.median()
-
-    return render_template(
         'session.html'
         , session_id=session_id
-        , active_observation_id=active_observation_id
-        , timer_status=timer_status
         , vehicle_count=vehicle_count
         , max_speed=max_speed
         , median_speed=median_speed
@@ -478,7 +310,7 @@ def toggle_valid_on_list(session_id, observation_id):
     valid_action = request.args.get('valid_action')
     toggle_valid(observation_id, valid_action)
 
-    return session_handler(session_id)
+    return redirect(f'/session?session_id={session_id}')
 
 
 
