@@ -238,17 +238,15 @@ def broadcast_start(message):
     print('broadcast start')
     print(message)
 
-    # session_id = message['session_id']
+    session_id = message['session_id']
 
-    # utc_time = datetime.utcnow()
+    utc_time = datetime.utcnow()
 
     active_observation_id = models.generate_uuid()
-    # obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time)
+    obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time)
 
-    # db.session.add(obs)
-    # db.session.commit()
-
-    # timer_status = 'vehicle_in_timer'
+    db.session.add(obs)
+    db.session.commit()
 
     emit(
         'new observation id'
@@ -266,26 +264,22 @@ def broadcast_end(message):
     print('broadcast end')
     print(message)
 
-    # session_id = message['session_id']
-    # active_observation_id = message['active_observation_id']
+    session_id = message['session_id']
+    active_observation_id = message['active_observation_id']
 
-    # utc_time = datetime.utcnow()
+    utc_time = datetime.utcnow()
 
-    # this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
+    this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
     
-    # # Calculate time
-    # elapsed_td = utc_time - this_obs.scalar().start_time
-    # elapsed_seconds = elapsed_td.total_seconds()
+    # Calculate time
+    elapsed_td = utc_time - this_obs.scalar().start_time
+    elapsed_seconds = elapsed_td.total_seconds()
     
-    # this_obs.update({
-    #     models.Observation.end_time: utc_time
-    #     , models.Observation.elapsed_seconds: elapsed_seconds
-    #     })
-    # db.session.commit()
-
-    # active_observation_id = None
-    # timer_status = 'ready_to_start'
-
+    this_obs.update({
+        models.Observation.end_time: utc_time
+        , models.Observation.elapsed_seconds: elapsed_seconds
+        })
+    db.session.commit()
 
 
 

@@ -16,17 +16,21 @@ $(document).ready(function(){
     $('.timer_button').click(function() {
 
         var btn = document.getElementById("myButton");
+
         if (btn.value == "Start Timer") {
             btn.value = "End Timer";
             btn.innerHTML = "End Timer";
 
             socket.emit('broadcast start', {'session_id': session_id, 'active_observation_id': active_observation_id})
         }
+
         else {
             btn.value = "Start Timer";
             btn.innerHTML = "Start Timer";
 
             socket.emit('broadcast end', {'session_id': session_id, 'active_observation_id': active_observation_id})
+
+            active_observation_id = 'no_active_obs'
         }
       
     });
