@@ -14,13 +14,47 @@ from matplotlib.ticker import MaxNLocator
 
 
 from . import models
-from . import db
+from . import db, socketio
 from .forms import SessionSettingsForm
 
 from sqlalchemy import text
 
 
+from flask_socketio import emit
+
+
+
+
 local_timezone = 'America/New_York'
+
+
+
+@app.route('/socket')
+def get_socket():
+    return render_template('socket.html')
+
+@socketio.on('my event')
+def test_message(message):
+    print('test_message, my event')
+    print(message['data'])
+    emit('my response', {'data': message['data']})
+
+@socketio.on('my broadcast event')
+def test_message(message):
+    print('test_message, my broadcast event')
+    emit('my response', {'data': message['data']}, broadcast=True)
+
+@socketio.on('connect')
+def test_connect():
+    print('Client connected')
+    emit('my response', {'data': 'Connected'})
+
+@socketio.on('disconnect')
+def test_disconnect():
+    print('Client disconnected')
+
+
+
 
 
 @app.route('/session_settings', methods=['GET', 'POST'])
