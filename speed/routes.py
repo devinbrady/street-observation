@@ -17,6 +17,7 @@ from . import models
 from . import dataframes
 from . import db, socketio
 from .forms import SessionSettingsForm
+from .observation import toggle_valid
 
 
 local_timezone = 'America/New_York'
