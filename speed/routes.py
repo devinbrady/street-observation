@@ -5,7 +5,7 @@ from dateutil import tz
 from datetime import datetime
 
 from sqlalchemy import text
-from flask_socketio import emit
+from flask_socketio import emit, join_room
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response
 
@@ -168,6 +168,14 @@ def list_sessions():
         )
 
 
+# @socketio.on('activate timer')
+# def new_socket_connection(message):
+#     """
+#     When a new user connects via websocket, assign them to a room based on the session_id
+#     """
+#     join_room(message['session_id'])
+#     print('User joined room: ' + message['session_id'])
+
 
 @socketio.on('broadcast start')
 def broadcast_start(message):
@@ -175,6 +183,8 @@ def broadcast_start(message):
     A new observation has been initiated
     """
     session_id = message['session_id']
+
+    # join_room(session_id)
 
     utc_time = datetime.utcnow()
 
@@ -187,6 +197,7 @@ def broadcast_start(message):
     emit(
         'new observation id'
         , {'active_observation_id': active_observation_id}
+        # , room=session_id
         , broadcast=True
         )
 
@@ -216,6 +227,7 @@ def broadcast_end(message):
 
     emit(
         'observation concluded'
+        # , room=session_id
         , broadcast=True
         )
 

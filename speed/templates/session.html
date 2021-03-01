@@ -20,22 +20,32 @@ $(document).ready(function(){
 
         var btn = document.getElementById("myButton");
 
+        // if (btn.value == "Activate Timer") {          
+        //     btn.value = "Start Timer";
+        //     btn.innerHTML = "Start Timer";
+        //     btn.classList.remove('btn-danger');
+        //     btn.classList.add('btn-success');
+
+        //     socket.emit('activate timer', {'session_id': session_id});
+
+        // }
+
         if (btn.value == "Start Timer") {
             btn.value = "End Timer";
             btn.innerHTML = "End Timer";
-            btn.classList.remove('btn-success')
-            btn.classList.add('btn-danger')
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-danger');
 
-            socket.emit('broadcast start', {'session_id': session_id, 'active_observation_id': active_observation_id})
+            socket.emit('broadcast start', {'session_id': session_id, 'active_observation_id': active_observation_id});
         }
 
         else {
             btn.value = "Start Timer";
             btn.innerHTML = "Start Timer";
-            btn.classList.remove('btn-danger')
-            btn.classList.add('btn-success')
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-success');
 
-            socket.emit('broadcast end', {'session_id': session_id, 'active_observation_id': active_observation_id})
+            socket.emit('broadcast end', {'session_id': session_id, 'active_observation_id': active_observation_id});
         }
       
     });
@@ -49,8 +59,8 @@ $(document).ready(function(){
       if (btn.value == "Start Timer") {
           btn.value = "End Timer";
           btn.innerHTML = "End Timer";
-          btn.classList.remove('btn-success')
-          btn.classList.add('btn-danger')
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-danger');
 
       }
 
@@ -64,8 +74,8 @@ $(document).ready(function(){
       if (btn.value == "End Timer") {
           btn.value = "Start Timer";
           btn.innerHTML = "Start Timer";
-          btn.classList.remove('btn-danger')
-          btn.classList.add('btn-success')
+          btn.classList.remove('btn-danger');
+          btn.classList.add('btn-success');
       }
 
       location.reload();
@@ -80,6 +90,7 @@ $(document).ready(function(){
   <h2>Session</h2>
 
 <button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
+<!-- <button id="myButton" class="timer_button btn btn-outline-primary" value="Activate Timer">Activate Timer</button> -->
 
   <h2>Stats</h2>
   <ul>
