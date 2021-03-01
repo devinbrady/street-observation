@@ -89,10 +89,6 @@ $(document).ready(function(){
 
   <h2>Session</h2>
 
-<button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
-<!-- <button id="myButton" class="timer_button btn btn-outline-primary" value="Activate Timer">Activate Timer</button> -->
-
-  <h2>Stats</h2>
   <ul>
     <li>Vehicle Count: {{ vehicle_count }}</li>
     <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }}</li>
@@ -102,6 +98,14 @@ $(document).ready(function(){
   </ul>
 
   <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
+
+  <h2>Timer</h2>
+
+
+<div style="height: 200px" class="d-grid gap-2 d-md-block">
+  <button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
+</div>
+
 
 
 <h2>Observed Vehicles</h2>
