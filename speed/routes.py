@@ -7,13 +7,14 @@ from datetime import datetime
 from sqlalchemy import text
 from flask_socketio import emit, join_room
 from flask import current_app as app
-from flask import session, redirect, url_for, request, render_template, send_from_directory, Response
+from flask import session, redirect, url_for, request, render_template, send_from_directory, Response, abort
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
 
 from . import models
+from . import dataframes
 from . import db, socketio
 from .forms import SessionSettingsForm
 
@@ -168,13 +169,13 @@ def list_sessions():
         )
 
 
-# @socketio.on('activate timer')
-# def new_socket_connection(message):
-#     """
-#     When a new user connects via websocket, assign them to a room based on the session_id
-#     """
-#     join_room(message['session_id'])
-#     print('User joined room: ' + message['session_id'])
+@socketio.on('connect')
+def new_socket_connection():
+    """
+    When a new user connects via websocket, assign them to a room based on the session_id
+    """
+    join_room(session['session_id'])
+
 
 
 @socketio.on('broadcast start')
@@ -197,7 +198,7 @@ def broadcast_start(message):
     emit(
         'new observation id'
         , {'active_observation_id': active_observation_id}
-        # , room=session_id
+        , room=session['session_id']
         , broadcast=True
         )
 
@@ -210,6 +211,10 @@ def broadcast_end(message):
     """
     session_id = message['session_id']
     active_observation_id = message['active_observation_id']
+
+    if active_observation_id == 'no_active_obs':
+        print('No active observation ID passed')
+        abort(500)
 
     utc_time = datetime.utcnow()
 
@@ -227,7 +232,7 @@ def broadcast_end(message):
 
     emit(
         'observation concluded'
-        # , room=session_id
+        , room=session['session_id']
         , broadcast=True
         )
 
@@ -237,6 +242,12 @@ def broadcast_end(message):
 def session_handler():
 
     session_id = request.args.get('session_id')
+
+    # A session_id needs to be provided to view this page
+    if not session_id:
+        abort(404)
+
+    session['session_id'] = session_id
 
     observations = pd.read_sql(
         f'''
@@ -282,12 +293,8 @@ def session_handler():
     else:
 
         completed_observations['mph'] = completed_observations['distance_miles'] / (completed_observations['elapsed_seconds'] / 60 / 60)
-        completed_observations['start_time_local'] = (
-            completed_observations['start_time']
-            .dt.tz_localize('UTC')
-            .dt.tz_convert(local_timezone)
-            .dt.strftime('%l:%M:%S %p')
-            )
+
+        completed_observations = dataframes.add_local_timestamps(completed_observations, local_tz=local_timezone)
 
         valid_observations = completed_observations[completed_observations.valid].copy()
         vehicle_count = len(valid_observations)
@@ -371,81 +378,3 @@ def create_histogram(session_id):
 
 
 
-@app.route('/observation/<observation_id>', methods=['GET', 'POST'])
-def one_observation(observation_id):
-    """
-    Display information about one observation
-    """
-
-    if request.method == 'POST':
-        valid_action = request.args.get('valid_action')
-        toggle_valid(observation_id, valid_action)
-
-    this_obs = pd.read_sql(
-        f'''
-        select
-        o.start_time
-        , o.end_time
-        , o.elapsed_seconds
-        , o.valid
-        , s.session_id
-        , s.distance_miles
-        , s.speed_limit_mph
-
-        from observations o
-        inner join sessions s using (session_id)
-
-        where o.observation_id = '{observation_id}'
-        '''
-        , db.session.bind
-        )
-
-    this_obs['mph'] = this_obs['distance_miles'] / (this_obs['elapsed_seconds'] / 60 / 60)
-    this_obs['start_time_local'] = (
-        this_obs['start_time']
-        .dt.tz_localize('UTC')
-        .dt.tz_convert(local_timezone)
-        .dt.strftime('%l:%M:%S %p')
-        )
-
-    this_obs['start_date_local'] = (
-        this_obs['start_time']
-        .dt.tz_localize('UTC')
-        .dt.tz_convert(local_timezone)
-        .dt.strftime('%b %w, %Y')
-        )
-
-    this_obs_series = this_obs.squeeze()
-
-    return render_template(
-        'observation.html'
-        , observation_id=observation_id
-        , session_id=this_obs_series['session_id']
-        , start_date_local=this_obs_series['start_date_local']
-        , start_time_local=this_obs_series['start_time_local']
-        , distance_miles=this_obs_series['distance_miles']
-        , elapsed_seconds=this_obs_series['elapsed_seconds']
-        , mph=this_obs_series['mph']
-        , speed_limit_mph=this_obs_series['speed_limit_mph']
-        , valid=this_obs_series['valid']
-        )
-
-
-
-def toggle_valid(observation_id, valid_action):
-    """
-    Change the validation status of a single observation in the database
-    """
-
-    update_query = text('''
-        update observations
-        set valid = :valid_action
-        where observation_id = :observation_id
-    ''')
-
-    result = db.engine.execute(
-        update_query
-        , valid_action=valid_action
-        , observation_id=observation_id
-        )
-    # How to confirm this?

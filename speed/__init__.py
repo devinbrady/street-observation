@@ -29,6 +29,8 @@ def create_app(test_config=None):
     with app.app_context():
 
         from . import routes
+        from . import observation
+        
         db.create_all()
 
         return app
