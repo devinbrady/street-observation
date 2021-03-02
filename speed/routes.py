@@ -147,7 +147,7 @@ def list_sessions():
         from observations o
         inner join sessions s using (session_id)
 
-        where o.valid
+        where o.observation_valid
         and o.end_time is not null
 
         group by s.session_id, s.distance_miles
@@ -257,7 +257,7 @@ def session_handler():
         , o.start_time
         , o.end_time
         , o.elapsed_seconds
-        , o.valid
+        , o.observation_valid
         , s.distance_miles
         , s.speed_limit_mph
 
@@ -297,7 +297,7 @@ def session_handler():
 
         completed_observations = dataframes.add_local_timestamps(completed_observations, local_tz=local_timezone)
 
-        valid_observations = completed_observations[completed_observations.valid].copy()
+        valid_observations = completed_observations[completed_observations.observation_valid].copy()
         vehicle_count = len(valid_observations)
         max_speed = valid_observations.mph.max()
         median_speed = valid_observations.mph.median()
@@ -358,7 +358,7 @@ def create_histogram(session_id):
 
         where s.session_id = '{session_id}'
         and o.end_time is not null
-        and o.valid
+        and o.observation_valid
         '''
         , db.session.bind
         )

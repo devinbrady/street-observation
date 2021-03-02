@@ -86,10 +86,11 @@ $(document).ready(function(){
 });
 </script>
 
-
+<div style="height: 300px">
   <h2>Session</h2>
 
   <ul>
+    <li>Location Name: {{ location_name }}</li>
     <li>Vehicle Count: {{ vehicle_count }}</li>
     <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }}</li>
     <li>Median Speed: {{ '{:0.1f}'.format(median_speed) }}</li>
@@ -99,10 +100,12 @@ $(document).ready(function(){
 
   <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
 
-  <h2>Timer</h2>
+</div>
 
+<h2>Timer</h2>
 
-<div style="height: 200px" class="d-grid gap-2 d-md-block">
+<div style="height: 300px" class="d-grid gap-2 d-md-block">
+  
   <button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
 </div>
 
@@ -126,7 +129,7 @@ $(document).ready(function(){
     <td>{{ '%0.1f'|format(obs.mph|float) }}</td>
 
     <td>
-    {% if obs.valid %}
+    {% if obs.observation_valid %}
     <form action="/session/{{ session_id }}/{{ obs.observation_id }}?valid_action=False" method="POST">
       <button type="submit" class="btn btn-primary">Valid</button>
     </form>

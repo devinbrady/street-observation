@@ -15,12 +15,12 @@
     <li>Elapsed Seconds: {{ '%0.1f'|format(elapsed_seconds|float) }}</li>
     <li>Miles per Hour: {{ '%0.1f'|format(mph|float) }}</li>
     <li>Speed Limit: {{ '%0.0f'|format(speed_limit_mph|float) }}</li>
-    <li>Valid: {{ valid }}</li>
+    <li>Valid: {{ observation_valid }}</li>
   </ul>
 
 
 
-    {% if valid %}
+    {% if observation_valid %}
     <form action="/observation/{{ observation_id }}?valid_action=False" method="POST">
       <button type="submit" class="btn btn-primary">Valid</button>
     </form>

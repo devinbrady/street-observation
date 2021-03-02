@@ -32,7 +32,7 @@ def one_observation(observation_id):
         o.start_time
         , o.end_time
         , o.elapsed_seconds
-        , o.valid
+        , o.observation_valid
         , s.session_id
         , s.distance_miles
         , s.speed_limit_mph
@@ -61,7 +61,7 @@ def one_observation(observation_id):
         , elapsed_seconds=this_obs_series['elapsed_seconds']
         , mph=this_obs_series['mph']
         , speed_limit_mph=this_obs_series['speed_limit_mph']
-        , valid=this_obs_series['valid']
+        , observation_valid=this_obs_series['observation_valid']
         )
 
 
@@ -73,7 +73,7 @@ def toggle_valid(observation_id, valid_action):
 
     update_query = text('''
         update observations
-        set valid = :valid_action
+        set observation_valid = :valid_action
         where observation_id = :observation_id
     ''')
 
