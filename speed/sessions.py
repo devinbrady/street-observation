@@ -1,0 +1,368 @@
+
+import io
+import os
+import pandas as pd
+from dateutil import tz
+from datetime import datetime
+
+from sqlalchemy import text
+from flask_socketio import emit, join_room
+from flask import current_app as app
+from flask import session, redirect, url_for, request, render_template, send_from_directory, Response, abort
+
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+from matplotlib.ticker import MaxNLocator
+
+from . import models
+from . import dataframes
+from . import db, socketio
+from .forms import SessionSettingsForm
+from .observation import toggle_valid
+
+
+
+
+
+@app.route('/session_settings', methods=['GET', 'POST'])
+def edit_session_settings():
+    """
+    Receive information about each session
+    """
+
+    session_id = request.args.get('session_id')
+    if not session_id:
+        session_id = 'new_session'
+
+
+    if session_id == 'new_session':
+        # New session
+
+        form = SessionSettingsForm(
+            speed_limit_mph=20
+            , distance_miles=0.01
+            , session_mode='pair'
+            )
+    
+        if form.validate_on_submit():
+
+            session_id = models.generate_uuid()
+
+            new_session = models.ObservationSession(
+                session_id
+                , form.session_mode.data
+                , form.full_name.data
+                , form.email.data
+                , form.speed_limit_mph.data
+                , form.distance_miles.data
+                )
+            db.session.add(new_session)
+            db.session.commit()
+
+            return redirect(f'session?session_id={session_id}')
+
+    else:
+        # Existing session
+        query = f'''
+            select
+            full_name
+            , email
+            , session_mode
+            , speed_limit_mph
+            , distance_miles
+
+            from sessions
+            where session_id = '{session_id}'
+        '''
+
+        settings_df = pd.read_sql(query, db.session.bind)
+        settings = settings_df.squeeze()
+
+        form = SessionSettingsForm(
+            full_name=settings['full_name']
+            , email=settings['email']
+            , speed_limit_mph=settings['speed_limit_mph']
+            , distance_miles=settings['distance_miles']
+            , session_mode=settings['session_mode']
+            )
+
+        if form.validate_on_submit():
+            t = text('''
+                update sessions
+                set 
+                    full_name = :full_name
+                    , email = :email
+                    , distance_miles = :distance_miles
+                    , speed_limit_mph = :speed_limit_mph
+                    , session_mode = :session_mode
+
+                where session_id = :session_id
+                ''')
+
+            result = db.engine.execute(
+                t
+                , session_id=session_id
+                , full_name=form.full_name.data
+                , email=form.email.data
+                , distance_miles=form.distance_miles.data
+                , speed_limit_mph=form.speed_limit_mph.data
+                , session_mode=form.session_mode.data
+                )
+
+            return redirect(f'session?session_id={session_id}')
+
+    
+    return render_template(
+        'session_settings.html'
+        , form=form
+        , session_id=session_id
+        )
+
+
+
+@app.route('/session_list', methods=['GET'])
+def list_sessions():
+    sessions = pd.read_sql(
+        f'''
+        select
+        s.session_id
+        , s.distance_miles
+        , s.full_name
+        , min(o.start_time) as first_start
+        , count(o.*) as num_observations
+
+        from observations o
+        inner join sessions s using (session_id)
+
+        where o.observation_valid
+        and o.end_time is not null
+
+        group by s.session_id, s.distance_miles
+        order by first_start desc
+        '''
+        , db.session.bind
+        )
+
+    sessions['start_timestamp_local'] = (
+        sessions['first_start']
+        .dt.tz_localize('UTC')
+        .dt.tz_convert(local_timezone)
+        .dt.strftime('%Y-%m-%d %l:%M:%S %p')
+        )
+
+
+    return render_template(
+        'session_list.html'
+        , sessions=sessions
+        )
+
+
+@socketio.on('connect')
+def new_socket_connection():
+    """
+    When a new user connects via websocket, assign them to a room based on the session_id
+    """
+    join_room(session['session_id'])
+
+
+
+@socketio.on('broadcast start')
+def broadcast_start(message):
+    """
+    A new observation has been initiated
+    """
+    session_id = message['session_id']
+
+    # join_room(session_id)
+
+    utc_time = datetime.utcnow()
+
+    active_observation_id = models.generate_uuid()
+    obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time)
+
+    db.session.add(obs)
+    db.session.commit()
+
+    emit(
+        'new observation id'
+        , {'active_observation_id': active_observation_id}
+        , room=session['session_id']
+        , broadcast=True
+        )
+
+
+
+@socketio.on('broadcast end')
+def broadcast_end(message):
+    """
+    The timer has ended for an observation
+    """
+    session_id = message['session_id']
+    active_observation_id = message['active_observation_id']
+
+    if active_observation_id == 'no_active_obs':
+        print('No active observation ID passed')
+        abort(500)
+
+    utc_time = datetime.utcnow()
+
+    this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
+    
+    # Calculate time
+    elapsed_td = utc_time - this_obs.scalar().start_time
+    elapsed_seconds = elapsed_td.total_seconds()
+    
+    this_obs.update({
+        models.Observation.end_time: utc_time
+        , models.Observation.elapsed_seconds: elapsed_seconds
+        })
+    db.session.commit()
+
+    emit(
+        'observation concluded'
+        , room=session['session_id']
+        , broadcast=True
+        )
+
+
+
+@app.route('/session', methods=['GET', 'POST'])
+def session_handler():
+
+    session_id = request.args.get('session_id')
+
+    # A session_id needs to be provided to view this page
+    if not session_id:
+        abort(404)
+
+    session['session_id'] = session_id
+
+    observations = pd.read_sql(
+        f'''
+        select
+        o.observation_id
+        , o.start_time
+        , o.end_time
+        , o.elapsed_seconds
+        , o.observation_valid
+        , s.distance_miles
+        , s.speed_limit_mph
+
+        from observations o
+        inner join sessions s using (session_id)
+
+        where s.session_id = '{session_id}'
+
+        order by o.start_time desc
+        '''
+        , db.session.bind
+        )
+
+    completed_observations = observations[observations.end_time.notnull()].copy()
+
+
+    if len(observations) == 0:
+
+        vehicle_count = 0
+        max_speed = 0
+        median_speed = 0
+        speed_limit_mph = 0
+        distance_miles = 0
+
+    elif len(observations) == 1 and len(completed_observations) == 0:
+        # first time through, timer_status = 'vehicle_in_timer'
+
+        vehicle_count = 0
+        max_speed = 0
+        median_speed = 0
+        speed_limit_mph = observations.speed_limit_mph.median()
+        distance_miles = observations.distance_miles.median()
+
+    else:
+
+        completed_observations['mph'] = completed_observations['distance_miles'] / (completed_observations['elapsed_seconds'] / 60 / 60)
+
+        completed_observations = dataframes.add_local_timestamps(completed_observations, local_tz=local_timezone)
+
+        valid_observations = completed_observations[completed_observations.observation_valid].copy()
+        vehicle_count = len(valid_observations)
+        max_speed = valid_observations.mph.max()
+        median_speed = valid_observations.mph.median()
+        distance_miles = observations.distance_miles.median()
+        speed_limit_mph = observations.speed_limit_mph.median()
+
+    return render_template(
+        'session.html'
+        , session_id=session_id
+        , vehicle_count=vehicle_count
+        , max_speed=max_speed
+        , median_speed=median_speed
+        , speed_limit_mph=speed_limit_mph
+        , distance_miles=distance_miles
+        , df=completed_observations
+        )
+
+
+
+@app.route('/session/<session_id>/<observation_id>', methods=['POST'])
+def toggle_valid_on_list(session_id, observation_id):
+    """
+    When on a session page with a list of observations, toggle the validity of one observation
+    """
+
+    valid_action = request.args.get('valid_action')
+    toggle_valid(observation_id, valid_action)
+
+    return redirect(f'/session?session_id={session_id}')
+
+
+
+@app.route('/session/<session_id>/plot.png')
+def plot_png(session_id):
+    """
+    For one session_id, create a histogram and output it in bytes for display as an image
+    """
+    fig = create_histogram(session_id)
+    output = io.BytesIO()
+    FigureCanvas(fig).print_png(output)
+    return Response(output.getvalue(), mimetype='image/png')
+
+
+
+def create_histogram(session_id):
+    """
+    Create a Matplotlib figure for a histogram of speeds observed in one session
+    """
+
+    session_observations = pd.read_sql(
+        f'''
+        select
+        o.elapsed_seconds
+        , s.distance_miles
+
+        from observations o
+        inner join sessions s using (session_id)
+
+        where s.session_id = '{session_id}'
+        and o.end_time is not null
+        and o.observation_valid
+        '''
+        , db.session.bind
+        )
+
+    session_observations['mph'] = session_observations['distance_miles'] / (session_observations['elapsed_seconds'] / 60 / 60)
+
+    fig = Figure()
+    fig.set_size_inches(5, 4)
+    axis = fig.add_subplot(1, 1, 1)
+    axis.hist(session_observations['mph'])
+
+    axis.yaxis.set_major_locator(MaxNLocator(integer=True))
+    axis.set_title('Histogram of Observed Speeds')
+    axis.set_ylabel('Count of Vehicles')
+    axis.set_xlabel('MPH')
+
+    return fig
+
+
+

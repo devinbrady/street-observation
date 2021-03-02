@@ -29,7 +29,8 @@ def create_app(test_config=None):
     with app.app_context():
 
         from . import routes
-        from . import observation
+        from . import observations
+        from . import sessions
         
         db.create_all()
 
