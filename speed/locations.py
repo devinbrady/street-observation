@@ -7,6 +7,7 @@ from flask import session, redirect, url_for, request, render_template, send_fro
 
 from . import models
 from . import db
+from . import dataframes
 from .forms import LocationSettingsForm
 
 
@@ -103,13 +104,6 @@ def list_locations():
     with open(os.path.join(app.root_path, 'queries/locations_list.sql'), 'r') as f:
         locations = pd.read_sql(f.read(), db.session.bind)
 
-    # locations['start_timestamp_local'] = (
-    #     locations['first_start']
-    #     .dt.tz_localize('UTC')
-    #     .dt.tz_convert(locations['local_timezone'])
-    #     .dt.strftime('%Y-%m-%d %l:%M:%S %p')
-    #     )
-
 
     return render_template(
         'location_list.html'
@@ -138,14 +132,20 @@ def location_handler():
         sessions_at_location = pd.DataFrame()
     else:
         obs['mph'] = obs['distance_miles'] / (obs['elapsed_seconds'] / 60 / 60)
-        
+       
         sessions_at_location = obs.groupby('session_id').agg(
             session_id=('session_id', 'first')
-            , start_timestamp_local=('start_time', 'min')
+            , start_timestamp_min=('start_time', 'min')
+            , local_timezone=('local_timezone', 'first')
             , distance_miles=('distance_miles', 'median')
             , median_speed=('mph', 'median')
             , num_observations=('observation_id', 'count')
             )
+
+        sessions_at_location = dataframes.format_in_local_time(sessions_at_location, 'start_timestamp_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M:%S %p %Z')
+        sessions_at_location = sessions_at_location.sort_values(by='start_timestamp_min', ascending=False)
+
+
 
 
     return render_template(

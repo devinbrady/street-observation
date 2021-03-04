@@ -6,6 +6,7 @@ loc.location_name
 , o.observation_id
 , o.elapsed_seconds
 , o.start_time
+, o.local_timezone
 
 from observations o
 inner join sessions s using (session_id)
