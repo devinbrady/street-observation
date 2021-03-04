@@ -47,26 +47,16 @@ def edit_location_settings():
             db.session.add(new_location_object)
             db.session.commit()
 
+            session['local_timezone'] = form.local_timezone.data
+
             return redirect(f'session_settings?session_id=new_session&location_id={location_id}')
 
     else:
         # Existing location
 
-        query = text('''
-            select
-            location_name
-            , local_timezone
-            , street_address
-            , city
-            , state_code
-            , zip_code
-            , location_description
+        with open(os.path.join(app.root_path, 'queries/locations_one.sql'), 'r') as f:
+            locations_df = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
 
-            from locations
-            where location_id = :location_id
-        ''')
-
-        locations_df = pd.read_sql(query, db.session.bind, params={'location_id': location_id})
         locations = locations_df.squeeze()
 
         form = LocationSettingsForm(
@@ -80,31 +70,21 @@ def edit_location_settings():
             )
 
         if form.validate_on_submit():
-            t = text('''
-                update locations
-                set 
-                    location_name = :location_name
-                    , local_timezone = :local_timezone
-                    , street_address = :street_address
-                    , city = :city
-                    , state_code = :state_code
-                    , zip_code = :zip_code
-                    , location_description = :location_description
 
-                where location_id = :location_id
-                ''')
+            with open(os.path.join(app.root_path, 'queries/locations_update.sql'), 'r') as f:
+                result = db.engine.execute(
+                    text(f.read())
+                    , location_id=location_id
+                    , location_name=form.location_name.data
+                    , local_timezone=form.local_timezone.data
+                    , street_address=form.street_address.data
+                    , city=form.city.data
+                    , state_code=form.state_code.data
+                    , zip_code=form.zip_code.data
+                    , location_description=form.location_description.data
+                    )
 
-            result = db.engine.execute(
-                t
-                , location_id=location_id
-                , location_name=form.location_name.data
-                , local_timezone=form.local_timezone.data
-                , street_address=form.street_address.data
-                , city=form.city.data
-                , state_code=form.state_code.data
-                , zip_code=form.zip_code.data
-                , location_description=form.location_description.data
-                )
+            session['local_timezone'] = form.local_timezone.data
 
             return redirect(f'location_settings?location_id={location_id}')
 

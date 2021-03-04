@@ -114,6 +114,7 @@ class Observation(db.Model):
     __tablename__ = 'observations'
     observation_id = db.Column(UUID(as_uuid=True), primary_key=True)
     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
+    # location_id = db.Column(UUID(as_uuid=True), db.ForeignKey('locations.location_id'), nullable=False)
     observation_valid = db.Column(db.Boolean, nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime)
@@ -140,7 +141,7 @@ class Observation(db.Model):
 
         # Defaults when record created
         self.observation_valid = True
-        updated_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
 
 
 

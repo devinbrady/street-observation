@@ -36,6 +36,7 @@ def one_observation(observation_id):
         , s.session_id
         , s.distance_miles
         , s.speed_limit_mph
+        , s.location_id
 
         from observations o
         inner join sessions s using (session_id)
@@ -55,6 +56,7 @@ def one_observation(observation_id):
         'observation.html'
         , observation_id=observation_id
         , session_id=this_obs_series['session_id']
+        , location_id=this_obs_series['location_id']
         , start_date_local=this_obs_series['start_date_local']
         , start_time_local=this_obs_series['start_time_local']
         , distance_miles=this_obs_series['distance_miles']

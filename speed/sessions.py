@@ -31,10 +31,8 @@ def edit_session_settings():
     """
 
     location_id = request.args.get('location_id')
-    print('location_id')
-    print(location_id)
-    print()
     session_id = request.args.get('session_id')
+
     if not session_id:
         session_id = 'new_session'
 
@@ -73,37 +71,29 @@ def edit_session_settings():
         with open(os.path.join(app.root_path, 'queries/sessions_one.sql'), 'r') as f:
             settings_df = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
-        settings_df = pd.read_sql(query, db.session.bind)
         settings = settings_df.squeeze()
 
         form = SessionSettingsForm(
             speed_limit_mph=settings['speed_limit_mph']
-            , distance_miles=settings['distance_miles']
+            , distance_value=settings['distance_miles']
             , distance_units='miles'
             , session_mode=settings['session_mode']
+            , session_description=settings['session_description']
             )
 
         if form.validate_on_submit():
 
             distance_miles = convert_distance_units(form.distance_value.data, form.distance_units.data)
 
-            t = text('''
-                update sessions
-                set 
-                    distance_miles = :distance_miles
-                    , speed_limit_mph = :speed_limit_mph
-                    , session_mode = :session_mode
-
-                where session_id = :session_id
-                ''')
-
-            result = db.engine.execute(
-                t
-                , session_id=session_id
-                , distance_miles=distance_miles
-                , speed_limit_mph=form.speed_limit_mph.data
-                , session_mode=form.session_mode.data
-                )
+            with open(os.path.join(app.root_path, 'queries/sessions_update.sql'), 'r') as f:
+                result = db.engine.execute(
+                    text(f.read())
+                    , session_id=session_id
+                    , distance_miles=distance_miles
+                    , speed_limit_mph=form.speed_limit_mph.data
+                    , session_mode=form.session_mode.data
+                    , session_description=form.session_description.data
+                    )
 
             return redirect(f'session?session_id={session_id}')
 
@@ -135,35 +125,14 @@ def list_sessions():
     List all sessions
     """
 
-    sessions = pd.read_sql(
-        '''
-        select
-        s.session_id
-        , s.distance_miles
-        , s.session_description
-        , loc.location_id
-        , loc.location_name
-        , min(o.start_time) as first_start
-        , count(o.*) as num_observations
-
-        from observations o
-        inner join sessions s using (session_id)
-        inner join locations loc using (location_id)
-
-        where o.observation_valid
-        and o.end_time is not null
-
-        group by 1,2,3,4,5
-        order by first_start desc
-        '''
-        , db.session.bind
-        )
+    with open(os.path.join(app.root_path, 'queries/sessions_list.sql'), 'r') as f:
+        sessions = pd.read_sql(text(f.read()), db.session.bind)
 
     if len(sessions) > 0:
         sessions['start_timestamp_local'] = (
             sessions['first_start']
             .dt.tz_localize('UTC')
-            .dt.tz_convert(local_timezone)
+            .dt.tz_convert('America/New_York') # todo change
             .dt.strftime('%Y-%m-%d %l:%M:%S %p')
             )
 
@@ -189,6 +158,7 @@ def broadcast_start(message):
     A new observation has been initiated
     """
     session_id = message['session_id']
+    # location_id = message['location_id']
 
     # join_room(session_id)
 
@@ -254,28 +224,11 @@ def session_handler():
 
     session['session_id'] = session_id
 
-    observations = pd.read_sql(
-        f'''
-        select
-        o.observation_id
-        , o.start_time
-        , o.end_time
-        , o.elapsed_seconds
-        , o.observation_valid
-        , s.distance_miles
-        , s.speed_limit_mph
-
-        from observations o
-        inner join sessions s using (session_id)
-
-        where s.session_id = '{session_id}'
-
-        order by o.start_time desc
-        '''
-        , db.session.bind
-        )
+    with open(os.path.join(app.root_path, 'queries/observations_list.sql'), 'r') as f:
+        observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
     completed_observations = observations[observations.end_time.notnull()].copy()
+
 
 
     if len(observations) == 0:
@@ -299,7 +252,7 @@ def session_handler():
 
         completed_observations['mph'] = completed_observations['distance_miles'] / (completed_observations['elapsed_seconds'] / 60 / 60)
 
-        completed_observations = dataframes.add_local_timestamps(completed_observations, local_tz=local_timezone)
+        completed_observations = dataframes.add_local_timestamps(completed_observations, local_tz=session['local_timezone'])
 
         valid_observations = completed_observations[completed_observations.observation_valid].copy()
         vehicle_count = len(valid_observations)
@@ -349,23 +302,12 @@ def plot_png(session_id):
 def create_histogram(session_id):
     """
     Create a Matplotlib figure for a histogram of speeds observed in one session
+
+    todo: this query is basically run twice on the session page. find way to consolidate
     """
 
-    session_observations = pd.read_sql(
-        f'''
-        select
-        o.elapsed_seconds
-        , s.distance_miles
-
-        from observations o
-        inner join sessions s using (session_id)
-
-        where s.session_id = '{session_id}'
-        and o.end_time is not null
-        and o.observation_valid
-        '''
-        , db.session.bind
-        )
+    with open(os.path.join(app.root_path, 'queries/observations_histogram.sql'), 'r') as f:
+        session_observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
     session_observations['mph'] = session_observations['distance_miles'] / (session_observations['elapsed_seconds'] / 60 / 60)
 
