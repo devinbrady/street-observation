@@ -9,7 +9,6 @@
   <table class="table">
   <thead>
   <tr>
-    <th scope="col">Location ID</th>
     <th scope="col">Location Name</th>
     <th scope="col">Number of Sessions</th>
     <th scope="col">Number of Valid Observations</th>
@@ -18,8 +17,7 @@
   <tbody>
   {% for _, row in locations.iterrows() %}
     <tr scope="row">
-    <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_id }}</a></td>
-    <td>{{ row.location_name }}</td>
+    <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_name }}</a></td>
     <td>{{ '%0.0f'|format(row.num_sessions|float) }}</td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
     </tr>

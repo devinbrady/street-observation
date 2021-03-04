@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Location: {{ location_name }}{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+  <h2>Location: {{ location_name }}</h2>
+
+  <ul>
+    <li>Location ID: {{ location_id }}</li>
+    <li>Local Timezone: {{ local_timezone }}</li>
+    <li>Street Address: {{ street_address }}</li>
+    <li>City: {{ city }}</li>
+    <li>State: {{ state_code }}</li>
+    <li>ZIP: {{ zip_code }}</li>
+    <li>Description: {{ location_description }}</li>
+  </ul>
+
+  <p><a href='/location_settings?location_id={{ location_id }}'>Edit location</a></p>
+
+  <table class="table">
+  <thead>
+  <tr>
+    <th scope="col">Date and Time</th>
+    <th scope="col">Distance (miles)</th>
+    <th scope="col">Median Speed</th>
+    <th scope="col">Number of Valid Observations</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for _, row in sessions_at_location.iterrows() %}
+    <tr scope="row">
+    <td><a href="/session?session_id={{ row.session_id }}">{{ row.start_timestamp_local }}</a></td>
+    <td>{{ '{:0.3f}'.format(row.distance_miles) }}</td>
+    <td>{{ '{:0.1f}'.format(row.median_speed) }}</td>
+    <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+  <p><a href='/session_settings?session_id=new_session&location_id={{ location_id }}'>Start a new session at this location</a></p>
+  <p><a href='/location_list'>List of Locations</a></p>
+  <p><a href="/">Home</a></p>
+
+
+{% endblock %}

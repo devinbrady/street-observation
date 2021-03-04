@@ -10,6 +10,7 @@ from . import db
 from .forms import LocationSettingsForm
 
 
+
 @app.route('/location_settings', methods=['GET', 'POST'])
 def edit_location_settings():
     """
@@ -49,7 +50,7 @@ def edit_location_settings():
 
             session['local_timezone'] = form.local_timezone.data
 
-            return redirect(f'session_settings?session_id=new_session&location_id={location_id}')
+            return redirect(f'location?location_id={location_id}')
 
     else:
         # Existing location
@@ -86,7 +87,7 @@ def edit_location_settings():
 
             session['local_timezone'] = form.local_timezone.data
 
-            return redirect(f'location_settings?location_id={location_id}')
+            return redirect(f'location?location_id={location_id}')
 
 
     return render_template(
@@ -118,3 +119,54 @@ def list_locations():
         'location_list.html'
         , locations=locations
         )
+
+
+@app.route('/location', methods=['GET'])
+def location_handler():
+
+    location_id = request.args.get('location_id')
+
+    # A location_id needs to be provided to view this page
+    if not location_id:
+        abort(404)
+
+    with open(os.path.join(app.root_path, 'queries/locations_one.sql'), 'r') as f:
+        locations_df = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
+        this_location = locations_df.squeeze()
+
+
+    with open(os.path.join(app.root_path, 'queries/observations_at_location.sql'), 'r') as f:
+        obs = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
+
+    if len(obs) == 0:
+        sessions_at_location = pd.DataFrame()
+    else:
+        obs['mph'] = obs['distance_miles'] / (obs['elapsed_seconds'] / 60 / 60)
+        
+        sessions_at_location = obs.groupby('session_id').agg(
+            session_id=('session_id', 'first')
+            , start_timestamp_local=('start_time', 'min')
+            , distance_miles=('distance_miles', 'median')
+            , median_speed=('mph', 'median')
+            , num_observations=('observation_id', 'count')
+            )
+
+
+    return render_template(
+        'location.html'
+        , location_id=location_id
+        , location_name=this_location['location_name']
+        , local_timezone=this_location['local_timezone']
+        , street_address=this_location['street_address']
+        , city=this_location['city']
+        , state_code=this_location['state_code']
+        , zip_code=this_location['zip_code']
+        , location_description=this_location['location_description']
+        , sessions_at_location=sessions_at_location
+        )
+
+
+
+
+
+

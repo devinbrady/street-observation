@@ -22,8 +22,6 @@ from .observations import toggle_valid
 
 
 
-
-
 @app.route('/session_settings', methods=['GET', 'POST'])
 def edit_session_settings():
     """

@@ -95,7 +95,7 @@ $(document).ready(function(){
     <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }}</li>
     <li>Median Speed: {{ '{:0.1f}'.format(median_speed) }}</li>
     <li>Speed Limit: {{ '{}'.format(speed_limit_mph) }}</li>
-    <li>Distance in Miles: {{ '{}'.format(distance_miles) }}</li>
+    <li>Distance in Miles: {{ '{:0.3f}'.format(distance_miles) }}</li>
   </ul>
 
   <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
@@ -152,8 +152,8 @@ $(document).ready(function(){
 {% endif %}
 </p>
 
-<p><a href='/session_settings'>Start a new session</a></p>
-
 <p><a href="/session_list">Session List</a></p>
+<p><a href="/location_list">Location List</a></p>
+<p><a href="/">Home</a></p>
 
 {% endblock %}
