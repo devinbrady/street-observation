@@ -1,5 +1,7 @@
 -- build_db.sql
 
+-- Database's timezone should always be UTC
+set time zone 'UTC';
 
 
 drop table if exists sessions;

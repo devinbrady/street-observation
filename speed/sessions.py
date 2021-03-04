@@ -3,7 +3,7 @@ import io
 import os
 import pandas as pd
 from dateutil import tz
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import text
 from flask_socketio import emit, join_room
@@ -51,6 +51,8 @@ def edit_session_settings():
 
             distance_miles = convert_distance_units(form.distance_value.data, form.distance_units.data)
 
+            local_timezone = models.get_location_timezone(location_id)
+
             new_session_object = models.ObservationSession(
                 session_id=session_id
                 , location_id=location_id
@@ -58,6 +60,7 @@ def edit_session_settings():
                 , speed_limit_mph=form.speed_limit_mph.data
                 , distance_miles=distance_miles
                 , session_description=form.session_description.data
+                , local_timezone=local_timezone
                 )
             db.session.add(new_session_object)
             db.session.commit()
@@ -127,12 +130,9 @@ def list_sessions():
         sessions = pd.read_sql(text(f.read()), db.session.bind)
 
     if len(sessions) > 0:
-        sessions['start_timestamp_local'] = (
-            sessions['first_start']
-            .dt.tz_localize('UTC')
-            .dt.tz_convert('America/New_York') # todo change
-            .dt.strftime('%Y-%m-%d %l:%M:%S %p')
-            )
+
+        sessions = dataframes.format_in_local_time(
+            sessions, 'first_start', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M:%S %p %Z')
 
     return render_template(
         'session_list.html'
@@ -160,10 +160,11 @@ def broadcast_start(message):
 
     # join_room(session_id)
 
-    utc_time = datetime.utcnow()
+    utc_time = datetime.now(tz=timezone.utc)
 
     active_observation_id = models.generate_uuid()
-    obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time)
+    session_timezone = models.get_session_timezone(session_id)
+    obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time, local_timezone=session_timezone)
 
     db.session.add(obs)
     db.session.commit()
@@ -189,7 +190,7 @@ def broadcast_end(message):
         print('No active observation ID passed')
         abort(500)
 
-    utc_time = datetime.utcnow()
+    utc_time = datetime.now(tz=timezone.utc)
 
     this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
     
@@ -227,6 +228,9 @@ def session_handler():
 
     completed_observations = observations[observations.end_time.notnull()].copy()
 
+    # with open(os.path.join(app.root_path, 'queries/locations_one.sql'), 'r') as f:
+    #     locations_df = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
+    #     this_location = locations_df.squeeze()
 
 
     if len(observations) == 0:
@@ -250,7 +254,9 @@ def session_handler():
 
         completed_observations['mph'] = completed_observations['distance_miles'] / (completed_observations['elapsed_seconds'] / 60 / 60)
 
-        completed_observations = dataframes.add_local_timestamps(completed_observations, local_tz=session['local_timezone'])
+        completed_observations = dataframes.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
+        completed_observations = dataframes.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
+
 
         valid_observations = completed_observations[completed_observations.observation_valid].copy()
         vehicle_count = len(valid_observations)
@@ -262,6 +268,7 @@ def session_handler():
     return render_template(
         'session.html'
         , session_id=session_id
+        # , location_name=location_name
         , vehicle_count=vehicle_count
         , max_speed=max_speed
         , median_speed=median_speed

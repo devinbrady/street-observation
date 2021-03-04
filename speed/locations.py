@@ -36,19 +36,17 @@ def edit_location_settings():
             location_id = models.generate_uuid()
 
             new_location_object = models.Location(
-                location_id
-                , form.location_name.data
-                , form.local_timezone.data
-                , form.street_address.data
-                , form.city.data
-                , form.state_code.data
-                , form.zip_code.data
-                , form.location_description.data
+                location_id=location_id
+                , location_name=form.location_name.data
+                , street_address=form.street_address.data
+                , city=form.city.data
+                , state_code=form.state_code.data
+                , zip_code=form.zip_code.data
+                , location_description=form.location_description.data
+                , local_timezone=form.local_timezone.data
                 )
             db.session.add(new_location_object)
             db.session.commit()
-
-            session['local_timezone'] = form.local_timezone.data
 
             return redirect(f'location?location_id={location_id}')
 
@@ -84,8 +82,6 @@ def edit_location_settings():
                     , zip_code=form.zip_code.data
                     , location_description=form.location_description.data
                     )
-
-            session['local_timezone'] = form.local_timezone.data
 
             return redirect(f'location?location_id={location_id}')
 

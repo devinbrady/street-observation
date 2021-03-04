@@ -2,6 +2,7 @@
 Routes related to a single observation
 """
 
+import os
 import pandas as pd
 from sqlalchemy import text
 
@@ -12,8 +13,6 @@ from flask import request, render_template
 from . import db
 from . import dataframes
 
-
-local_timezone = 'America/New_York'
 
 
 @app.route('/observation/<observation_id>', methods=['GET', 'POST'])
@@ -26,29 +25,13 @@ def one_observation(observation_id):
         valid_action = request.args.get('valid_action')
         toggle_valid(observation_id, valid_action)
 
-    this_obs = pd.read_sql(
-        f'''
-        select
-        o.start_time
-        , o.end_time
-        , o.elapsed_seconds
-        , o.observation_valid
-        , s.session_id
-        , s.distance_miles
-        , s.speed_limit_mph
-        , s.location_id
-
-        from observations o
-        inner join sessions s using (session_id)
-
-        where o.observation_id = '{observation_id}'
-        '''
-        , db.session.bind
-        )
+    with open(os.path.join(app.root_path, 'queries/observations_one.sql'), 'r') as f:
+        this_obs = pd.read_sql(text(f.read()), db.session.bind, params={'observation_id': observation_id})
 
     this_obs['mph'] = this_obs['distance_miles'] / (this_obs['elapsed_seconds'] / 60 / 60)
 
-    this_obs = dataframes.add_local_timestamps(this_obs, local_tz=local_timezone)
+    this_obs = dataframes.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
+    this_obs = dataframes.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
 
     this_obs_series = this_obs.squeeze()
 
