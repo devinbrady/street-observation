@@ -9,7 +9,7 @@ def generate_uuid():
 
 
 
-class Location(db.Model)
+class Location(db.Model):
     """
     Store information about the physical location where an observation session occurs
     """
@@ -38,9 +38,9 @@ class Location(db.Model)
             , city
             , state_code
             , zip_code
-            , location_latitude
-            , location_longitude
             , location_description
+            , location_latitude=1.2
+            , location_longitude=2.3
         ):
 
         self.location_id = location_id
@@ -50,8 +50,8 @@ class Location(db.Model)
         self.city = city
         self.state_code = state_code
         self.zip_code = zip_code
-        self.location_latitude = location_latitude
-        self.location_longitude = location_longitude
+        # self.location_latitude = location_latitude
+        # self.location_longitude = location_longitude
         self.location_description = location_description
 
         # Defaults when record created
@@ -59,6 +59,7 @@ class Location(db.Model)
         self.created_at = utc_now
         self.updated_at = utc_now
         self.deleted_at = None
+
 
 
 class ObservationSession(db.Model):

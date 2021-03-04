@@ -18,7 +18,7 @@ from . import models
 from . import dataframes
 from . import db, socketio
 from .forms import SessionSettingsForm
-from .observation import toggle_valid
+from .observations import toggle_valid
 
 
 
@@ -30,6 +30,10 @@ def edit_session_settings():
     Receive information about each session
     """
 
+    location_id = request.args.get('location_id')
+    print('location_id')
+    print(location_id)
+    print()
     session_id = request.args.get('session_id')
     if not session_id:
         session_id = 'new_session'
@@ -40,7 +44,8 @@ def edit_session_settings():
 
         form = SessionSettingsForm(
             speed_limit_mph=20
-            , distance_miles=0.01
+            , distance_value=100
+            , distance_units='feet'
             , session_mode='pair'
             )
     
@@ -48,51 +53,44 @@ def edit_session_settings():
 
             session_id = models.generate_uuid()
 
-            new_session = models.ObservationSession(
-                session_id
-                , form.session_mode.data
-                , form.full_name.data
-                , form.email.data
-                , form.speed_limit_mph.data
-                , form.distance_miles.data
+            distance_miles = convert_distance_units(form.distance_value.data, form.distance_units.data)
+
+            new_session_object = models.ObservationSession(
+                session_id=session_id
+                , location_id=location_id
+                , session_mode=form.session_mode.data
+                , speed_limit_mph=form.speed_limit_mph.data
+                , distance_miles=distance_miles
+                , session_description=form.session_description.data
                 )
-            db.session.add(new_session)
+            db.session.add(new_session_object)
             db.session.commit()
 
             return redirect(f'session?session_id={session_id}')
 
     else:
         # Existing session
-        query = f'''
-            select
-            full_name
-            , email
-            , session_mode
-            , speed_limit_mph
-            , distance_miles
-
-            from sessions
-            where session_id = '{session_id}'
-        '''
+        with open(os.path.join(app.root_path, 'queries/sessions_one.sql'), 'r') as f:
+            settings_df = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
         settings_df = pd.read_sql(query, db.session.bind)
         settings = settings_df.squeeze()
 
         form = SessionSettingsForm(
-            full_name=settings['full_name']
-            , email=settings['email']
-            , speed_limit_mph=settings['speed_limit_mph']
+            speed_limit_mph=settings['speed_limit_mph']
             , distance_miles=settings['distance_miles']
+            , distance_units='miles'
             , session_mode=settings['session_mode']
             )
 
         if form.validate_on_submit():
+
+            distance_miles = convert_distance_units(form.distance_value.data, form.distance_units.data)
+
             t = text('''
                 update sessions
                 set 
-                    full_name = :full_name
-                    , email = :email
-                    , distance_miles = :distance_miles
+                    distance_miles = :distance_miles
                     , speed_limit_mph = :speed_limit_mph
                     , session_mode = :session_mode
 
@@ -102,9 +100,7 @@ def edit_session_settings():
             result = db.engine.execute(
                 t
                 , session_id=session_id
-                , full_name=form.full_name.data
-                , email=form.email.data
-                , distance_miles=form.distance_miles.data
+                , distance_miles=distance_miles
                 , speed_limit_mph=form.speed_limit_mph.data
                 , session_mode=form.session_mode.data
                 )
@@ -115,46 +111,67 @@ def edit_session_settings():
     return render_template(
         'session_settings.html'
         , form=form
+        , location_id=location_id
         , session_id=session_id
         )
 
 
 
+def convert_distance_units(value, unit):
+    """
+    Return a distance value in miles
+    """
+
+    if unit == 'feet':
+        return value / 5280
+    else:
+        return value
+
+
+
 @app.route('/session_list', methods=['GET'])
 def list_sessions():
+    """
+    List all sessions
+    """
+
     sessions = pd.read_sql(
-        f'''
+        '''
         select
         s.session_id
         , s.distance_miles
-        , s.full_name
+        , s.session_description
+        , loc.location_id
+        , loc.location_name
         , min(o.start_time) as first_start
         , count(o.*) as num_observations
 
         from observations o
         inner join sessions s using (session_id)
+        inner join locations loc using (location_id)
 
         where o.observation_valid
         and o.end_time is not null
 
-        group by s.session_id, s.distance_miles
+        group by 1,2,3,4,5
         order by first_start desc
         '''
         , db.session.bind
         )
 
-    sessions['start_timestamp_local'] = (
-        sessions['first_start']
-        .dt.tz_localize('UTC')
-        .dt.tz_convert(local_timezone)
-        .dt.strftime('%Y-%m-%d %l:%M:%S %p')
-        )
-
+    if len(sessions) > 0:
+        sessions['start_timestamp_local'] = (
+            sessions['first_start']
+            .dt.tz_localize('UTC')
+            .dt.tz_convert(local_timezone)
+            .dt.strftime('%Y-%m-%d %l:%M:%S %p')
+            )
 
     return render_template(
         'session_list.html'
         , sessions=sessions
         )
+
 
 
 @socketio.on('connect')

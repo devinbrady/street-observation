@@ -31,6 +31,7 @@ def create_app(test_config=None):
         from . import routes
         from . import observations
         from . import sessions
+        from . import locations
         
         db.create_all()
 
