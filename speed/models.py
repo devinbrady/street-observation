@@ -111,6 +111,7 @@ class ObservationSession(db.Model):
             , distance_value
             , distance_units
             , speed_units
+            , publish
             , speed_limit_value=None
             , distance_meters=None
             , session_description=None
@@ -126,10 +127,9 @@ class ObservationSession(db.Model):
         self.speed_units = speed_units
         self.session_description = session_description
         self.local_timezone = local_timezone
-
+        self.publish = publish
+        
         # Defaults when record created
-        self.publish = False
-
         utc_now = utilities.now_utc()
         self.created_at = utc_now
         self.updated_at = utc_now

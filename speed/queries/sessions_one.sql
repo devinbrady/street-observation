@@ -9,6 +9,7 @@ s.location_id
 , s.speed_limit_value
 , s.speed_units
 , s.session_description
+, s.publish
 , loc.location_name
 
 from sessions s

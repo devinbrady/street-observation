@@ -46,6 +46,7 @@ def edit_session_settings():
             , distance_value=100
             , distance_units='feet'
             , session_mode='timer'
+            , publish=False
             )
     
         if form.validate_on_submit():
@@ -67,6 +68,7 @@ def edit_session_settings():
                 , distance_units=form.distance_units.data
                 , session_description=form.session_description.data
                 , local_timezone=local_timezone
+                , publish=form.publish.data
                 )
             db.session.add(new_session_object)
             db.session.commit()
@@ -85,6 +87,7 @@ def edit_session_settings():
             , distance_units=settings['distance_units']
             , session_mode=settings['session_mode']
             , session_description=settings['session_description']
+            , publish=settings['publish']
             )
 
         if form.validate_on_submit():
@@ -102,6 +105,7 @@ def edit_session_settings():
                     , speed_units=form.speed_units.data
                     , session_mode=form.session_mode.data
                     , session_description=form.session_description.data
+                    , publish=form.publish.data
                     , updated_at=utilities.now_utc()
                     )
 
@@ -332,7 +336,7 @@ def create_histogram(session_id):
         )
 
     fig = Figure()
-    fig.set_size_inches(5, 4)
+    fig.set_size_inches(4, 3)
     axis = fig.add_subplot(1, 1, 1)
     axis.hist(session_observations['speed_value'])
 

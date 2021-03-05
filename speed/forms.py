@@ -1,6 +1,6 @@
 
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, TextField, IntegerField, DecimalField, SubmitField
+from wtforms import SelectField, StringField, TextField, IntegerField, DecimalField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Length, Email
 
 
@@ -53,7 +53,11 @@ class SessionSettingsForm(FlaskForm):
         , description='A nearby street address for this location'
     )
 
-    # publish = Boolean
+    publish = BooleanField(
+        'Publish Observation Session'
+        , render_kw={'class': 'form-check-input'}
+        , description='Check this box if you want to publish this observation session for public viewing.'
+        )
 
     # delete
 
