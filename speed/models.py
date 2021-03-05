@@ -1,9 +1,11 @@
-from . import db
+
 import pandas as pd
-from datetime import datetime, timezone
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
+
+from . import db
+from . import utilities
 
 
 def generate_uuid():
@@ -72,7 +74,7 @@ class Location(db.Model):
         self.local_timezone = local_timezone
 
         # Defaults when record created
-        utc_now = datetime.now(tz=timezone.utc)
+        utc_now = utilities.now_utc()
         self.created_at = utc_now
         self.updated_at = utc_now
         self.deleted_at = None
@@ -119,7 +121,7 @@ class ObservationSession(db.Model):
         # Defaults when record created
         self.publish = False
 
-        utc_now = datetime.now(tz=timezone.utc)
+        utc_now = utilities.now_utc()
         self.created_at = utc_now
         self.updated_at = utc_now
         self.deleted_at = None
@@ -164,7 +166,7 @@ class Observation(db.Model):
 
         # Defaults when record created
         self.observation_valid = True
-        self.updated_at = datetime.now(tz=timezone.utc)
+        self.updated_at = utilities.now_utc()
 
 
 

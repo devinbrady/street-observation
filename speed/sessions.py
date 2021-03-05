@@ -2,8 +2,6 @@
 import io
 import os
 import pandas as pd
-from dateutil import tz
-from datetime import datetime, timezone
 
 from sqlalchemy import text
 from flask_socketio import emit, join_room
@@ -15,7 +13,7 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
 
 from . import models
-from . import dataframes
+from . import utilities
 from . import db, socketio
 from .forms import SessionSettingsForm
 from .observations import toggle_valid
@@ -94,6 +92,7 @@ def edit_session_settings():
                     , speed_limit_mph=form.speed_limit_mph.data
                     , session_mode=form.session_mode.data
                     , session_description=form.session_description.data
+                    , updated_at=utilities.now_utc()
                     )
 
             return redirect(f'session?session_id={session_id}')
@@ -131,7 +130,7 @@ def list_sessions():
 
     if len(sessions) > 0:
 
-        sessions = dataframes.format_in_local_time(
+        sessions = utilities.format_in_local_time(
             sessions, 'first_start', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M:%S %p %Z')
 
     return render_template(
@@ -160,7 +159,7 @@ def broadcast_start(message):
 
     # join_room(session_id)
 
-    utc_time = datetime.now(tz=timezone.utc)
+    utc_time = utilities.now_utc()
 
     active_observation_id = models.generate_uuid()
     session_timezone = models.get_session_timezone(session_id)
@@ -190,7 +189,7 @@ def broadcast_end(message):
         print('No active observation ID passed')
         abort(500)
 
-    utc_time = datetime.now(tz=timezone.utc)
+    utc_time = utilities.now_utc()
 
     this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
     
@@ -254,8 +253,8 @@ def session_handler():
 
         completed_observations['mph'] = completed_observations['distance_miles'] / (completed_observations['elapsed_seconds'] / 60 / 60)
 
-        completed_observations = dataframes.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
-        completed_observations = dataframes.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
+        completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
+        completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
 
 
         valid_observations = completed_observations[completed_observations.observation_valid].copy()

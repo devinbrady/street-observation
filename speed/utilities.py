@@ -2,23 +2,7 @@
 """
 
 import pandas as pd
-
-
-def add_local_timestamps(df, local_tz):
-
-    df['start_time_local'] = (
-        df['start_time']
-        .dt.tz_convert(local_tz)
-        .dt.strftime('%l:%M:%S %p')
-        )
-
-    df['start_date_local'] = (
-        df['start_time']
-        .dt.tz_convert(local_tz)
-        .dt.strftime('%b %w, %Y')
-        )
-
-    return df
+from datetime import datetime, timezone
 
 
 
@@ -33,3 +17,12 @@ def format_in_local_time(df, timestamp_column, tz_column, output_column, output_
     # df[output_column] = df.groupby(tz_column)[timestamp_column].transform(lambda x: x.dt.tz_convert(x.name))
 
     return df
+
+
+
+def now_utc():
+    """
+    Return the current time according to the server, localized to UTC
+    """
+
+    return datetime.now(tz=timezone.utc)

@@ -5,9 +5,9 @@ from sqlalchemy import text
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response, abort
 
-from . import models
 from . import db
-from . import dataframes
+from . import models
+from . import utilities
 from .forms import LocationSettingsForm
 
 
@@ -82,6 +82,7 @@ def edit_location_settings():
                     , state_code=form.state_code.data
                     , zip_code=form.zip_code.data
                     , location_description=form.location_description.data
+                    , updated_at=utilities.now_utc()
                     )
 
             return redirect(f'location?location_id={location_id}')
@@ -142,7 +143,7 @@ def location_handler():
             , num_observations=('observation_id', 'count')
             )
 
-        sessions_at_location = dataframes.format_in_local_time(sessions_at_location, 'start_timestamp_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M:%S %p %Z')
+        sessions_at_location = utilities.format_in_local_time(sessions_at_location, 'start_timestamp_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M:%S %p %Z')
         sessions_at_location = sessions_at_location.sort_values(by='start_timestamp_min', ascending=False)
 
 

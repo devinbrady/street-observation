@@ -11,7 +11,7 @@ from flask import request, render_template
 
 
 from . import db
-from . import dataframes
+from . import utilities
 
 
 
@@ -30,8 +30,8 @@ def one_observation(observation_id):
 
     this_obs['mph'] = this_obs['distance_miles'] / (this_obs['elapsed_seconds'] / 60 / 60)
 
-    this_obs = dataframes.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
-    this_obs = dataframes.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
+    this_obs = utilities.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
+    this_obs = utilities.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
 
     this_obs_series = this_obs.squeeze()
 
