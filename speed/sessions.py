@@ -1,6 +1,7 @@
 
 import io
 import os
+import segno
 import pandas as pd
 
 from sqlalchemy import text
@@ -26,13 +27,14 @@ def edit_session_settings():
     Receive information about each session
     """
 
-    location_id = request.args.get('location_id')
     session_id = request.args.get('session_id')
-
-    this_location = utilities.one_location(location_id)
 
     if not session_id:
         session_id = 'new_session'
+
+    # todo: better connect session to location
+    location_id = request.args.get('location_id')
+    # this_location = utilities.one_location(location_id)
 
 
     if session_id == 'new_session':
@@ -110,7 +112,7 @@ def edit_session_settings():
         'session_settings.html'
         , form=form
         , location_id=location_id
-        , location_name=this_location['location_name']
+        # , location_name=this_location['location_name']
         , session_id=session_id
         )
 
@@ -278,6 +280,8 @@ def session_handler():
         , speed_units=this_settings['speed_units']
         , distance_value=this_settings['distance_value']
         , distance_units=this_settings['distance_units']
+        , qr=plot_qr_code()
+        , this_url=request.url
         , df=completed_observations
         )
 
@@ -340,4 +344,12 @@ def create_histogram(session_id):
     return fig
 
 
+
+def plot_qr_code():
+    """
+    Turn the request's URL into a QR code, so another user can join the observation session
+    """
+
+    qr = segno.make(request.url)
+    return qr
 

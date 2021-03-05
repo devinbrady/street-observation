@@ -153,6 +153,18 @@ $(document).ready(function(){
 {% endif %}
 </p>
 
+<div>
+  To invite another user to join this observation session, show them this QR code:
+  <div>
+    <img src="{{ qr.svg_data_uri(scale=5) }}">
+  </div>
+  Alternatively, you can send them this link: <a href="{{ this_url }}">{{ this_url }}</a>
+</div>
+
+<br />
+<br />
+<br />
+
 <p><a href="/location_list">Location List</a></p>
 <p><a href="/">Home</a></p>
 
