@@ -12,7 +12,7 @@ class SessionSettingsForm(FlaskForm):
     session_mode = SelectField(
         'Session Mode'
         # , [DataRequired()]
-        , choices=['solo', 'pair', 'radar']
+        , choices=['timer', 'radar']
         , render_kw={'class': 'form-control'}
     )
 
@@ -24,13 +24,19 @@ class SessionSettingsForm(FlaskForm):
     speed_units = SelectField(
         'Speed Units'
         , [DataRequired()]
-        , choices=['miles_per_hour', 'kilometers_per_hour', 'feet_per_second', 'meters_per_second']
+        , choices=[
+            'miles per hour'
+            , 'kilometers per hour'
+            , 'feet per second'
+            , 'meters per second'
+            ]
         , render_kw={'class': 'form-control'}
     )
 
     distance_value = DecimalField(
         'Distance'
         , [DataRequired()]
+        , places=None
         , render_kw={'class': 'form-control'}
         )
 

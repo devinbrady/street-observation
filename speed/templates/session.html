@@ -91,11 +91,12 @@ $(document).ready(function(){
 
   <ul>
     <li>Location Name: {{ location_name }}</li>
-    <li>Vehicle Count: {{ vehicle_count }}</li>
-    <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }}</li>
-    <li>Median Speed: {{ '{:0.1f}'.format(median_speed) }}</li>
     <li>Speed Limit: {{ '{}'.format(speed_limit_value) }} {{ speed_units }}</li>
     <li>Distance: {{ '{:0.3f}'.format(distance_value) }} {{ distance_units }}</li>
+    <li>Vehicle Count: {{ vehicle_count }}</li>
+    <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }} {{ speed_units }}</li>
+    <li>Median Speed: {{ '{:0.1f}'.format(median_speed) }} {{ speed_units }}</li>
+    <li>Most Recent Speed: {{ '{:0.1f}'.format(most_recent_speed) }} {{ speed_units }}</li>
   </ul>
 
   <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
@@ -117,7 +118,7 @@ $(document).ready(function(){
   <tr>
     <th scope="col">Start Time</th>
     <th scope="col">Seconds Elapsed</th>
-    <th scope="col">Miles Per Hour</th>
+    <th scope="col">Speed</th>
     <th scope="col">Valid</th>
   </tr>
   </thead>
@@ -152,7 +153,6 @@ $(document).ready(function(){
 {% endif %}
 </p>
 
-<p><a href="/session_list">Session List</a></p>
 <p><a href="/location_list">Location List</a></p>
 <p><a href="/">Home</a></p>
 

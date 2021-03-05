@@ -29,6 +29,8 @@ def edit_session_settings():
     location_id = request.args.get('location_id')
     session_id = request.args.get('session_id')
 
+    this_location = utilities.one_location(location_id)
+
     if not session_id:
         session_id = 'new_session'
 
@@ -38,10 +40,10 @@ def edit_session_settings():
 
         form = SessionSettingsForm(
             speed_limit_value=20
-            , speed_units='miles_per_hour'
+            , speed_units='miles per hour'
             , distance_value=100
             , distance_units='feet'
-            , session_mode='pair'
+            , session_mode='timer'
             )
     
         if form.validate_on_submit():
@@ -71,10 +73,8 @@ def edit_session_settings():
 
     else:
         # Existing session
-        with open(os.path.join(app.root_path, 'queries/sessions_one.sql'), 'r') as f:
-            settings_df = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
-        settings = settings_df.squeeze()
+        settings = utilities.one_session(session_id)
 
         form = SessionSettingsForm(
             speed_limit_value=settings['speed_limit_value']
@@ -110,6 +110,7 @@ def edit_session_settings():
         'session_settings.html'
         , form=form
         , location_id=location_id
+        , location_name=this_location['location_name']
         , session_id=session_id
         )
 
@@ -217,24 +218,22 @@ def session_handler():
 
     session['session_id'] = session_id
 
-    with open(os.path.join(app.root_path, 'queries/sessions_one.sql'), 'r') as f:
-        this_settings = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id}).squeeze()
+    this_settings = utilities.one_session(session_id)
+    # this_location = utilities.one_location(location_id)
 
     with open(os.path.join(app.root_path, 'queries/observations_list.sql'), 'r') as f:
         observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
     completed_observations = observations[observations.end_time.notnull()].copy()
 
-    # with open(os.path.join(app.root_path, 'queries/locations_one.sql'), 'r') as f:
-    #     locations_df = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
-    #     this_location = locations_df.squeeze()
-
+    
 
     if len(observations) == 0:
 
         vehicle_count = 0
         max_speed = 0
         median_speed = 0
+        most_recent_speed = 0
 
     elif len(observations) == 1 and len(completed_observations) == 0:
         # first time through, timer_status = 'vehicle_in_timer'
@@ -242,6 +241,7 @@ def session_handler():
         vehicle_count = 0
         max_speed = 0
         median_speed = 0
+        most_recent_speed = 0
 
     else:
 
@@ -262,16 +262,18 @@ def session_handler():
         vehicle_count = len(valid_observations)
         max_speed = valid_observations.speed_value.max()
         median_speed = valid_observations.speed_value.median()
+        most_recent_speed = valid_observations['speed_value'][0]
         
         speed_limit_value = observations.speed_limit_value.median()
 
     return render_template(
         'session.html'
         , session_id=session_id
-        # , location_name=location_name
+        , location_name=this_settings['location_name']
         , vehicle_count=vehicle_count
         , max_speed=max_speed
         , median_speed=median_speed
+        , most_recent_speed=most_recent_speed
         , speed_limit_value=this_settings['speed_limit_value']
         , speed_units=this_settings['speed_units']
         , distance_value=this_settings['distance_value']

@@ -54,10 +54,7 @@ def edit_location_settings():
     else:
         # Existing location
 
-        with open(os.path.join(app.root_path, 'queries/locations_one.sql'), 'r') as f:
-            locations_df = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
-
-        locations = locations_df.squeeze()
+        locations = utilities.one_location(location_id)
 
         form = LocationSettingsForm(
             location_name=locations['location_name']
@@ -95,7 +92,6 @@ def edit_location_settings():
         )
 
 
-
 @app.route('/location_list', methods=['GET'])
 def list_locations():
     """
@@ -113,6 +109,8 @@ def list_locations():
         , '%Y-%m-%d %l:%M %p %Z'
         )
 
+    locations['city_state'] = locations['city'] + ', ' + locations['state_code']
+
     return render_template(
         'location_list.html'
         , locations=locations
@@ -128,10 +126,7 @@ def location_handler():
     if not location_id:
         abort(404)
 
-    with open(os.path.join(app.root_path, 'queries/locations_one.sql'), 'r') as f:
-        locations_df = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
-        this_location = locations_df.squeeze()
-
+    this_location = utilities.one_location(location_id)
 
     with open(os.path.join(app.root_path, 'queries/observations_at_location.sql'), 'r') as f:
         obs = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})

@@ -3,6 +3,8 @@
 select
 loc.location_id
 , loc.location_name
+, loc.city
+, loc.state_code
 , loc.local_timezone
 , min(coalesce(o.start_time, loc.created_at)) as first_start
 , max(o.start_time) as most_recent_observation
@@ -17,5 +19,5 @@ left join observations o on (
     and o.end_time is not null
     )
 
-group by loc.location_id, loc.location_name
+group by 1,2,3,4,5
 order by first_start desc

@@ -1,10 +1,14 @@
 """
 """
 
+import os
 import pandas as pd
+from sqlalchemy import text
 from decimal import Decimal
 from datetime import datetime, timezone
+from flask import current_app as app
 
+from . import db
 
 
 def format_in_local_time(df, timestamp_column, tz_column, output_column, output_format):
@@ -55,16 +59,16 @@ def convert_distance_to_meters(value, unit):
 
 def convert_speed_for_display(distance_meters, elapsed_seconds, speed_units):
 
-    if speed_units == 'miles_per_hour':
+    if speed_units == 'miles per hour':
         return (distance_meters / 1609.34) / (elapsed_seconds / 3600)
 
-    elif speed_units == 'kilometers_per_hour':
+    elif speed_units == 'kilometers per hour':
         return (distance_meters / 1000) / (elapsed_seconds / 3600)
 
-    elif speed_units == 'meters_per_second':
+    elif speed_units == 'meters per second':
         return distance_meters / elapsed_seconds
 
-    elif speed_units == 'feet_per_second':
+    elif speed_units == 'feet per second':
         return (distance_meters * 3.28084) / elapsed_seconds
 
     else:        
@@ -76,4 +80,30 @@ def convert_speed_for_display(distance_meters, elapsed_seconds, speed_units):
 def display_speed_units(speed_units):
 
     return speed_units.replace('_', ' ')
+
+
+
+def one_location(location_id):
+    """
+    Return dataframe containing information about one location
+    """
+
+    with open(os.path.join(app.root_path, 'queries/locations_one.sql'), 'r') as f:
+        locations_df = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
+        this_location = locations_df.squeeze()
+
+    return this_location
+
+
+
+def one_session(session_id):
+    """
+    Return dataframe containing information about one session
+    """
+
+    with open(os.path.join(app.root_path, 'queries/sessions_one.sql'), 'r') as f:
+        session_df = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
+        this_session = session_df.squeeze()
+
+    return this_session
 

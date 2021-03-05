@@ -14,9 +14,11 @@ def page_not_found(e):
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
+@app.route('/about', methods=['GET'])
+def display_about():
+    return render_template('about.html')
+
 @app.route('/', methods=['GET'])
 def display_index():
     return render_template('index.html')
-
-
 
