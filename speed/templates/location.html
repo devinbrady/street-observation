@@ -22,7 +22,7 @@
   <thead>
   <tr>
     <th scope="col">Date and Time</th>
-    <th scope="col">Distance (miles)</th>
+    <th scope="col">Distance</th>
     <th scope="col">Median Speed</th>
     <th scope="col">Number of Valid Observations</th>
   </tr>
@@ -31,8 +31,8 @@
   {% for _, row in sessions_at_location.iterrows() %}
     <tr scope="row">
     <td><a href="/session?session_id={{ row.session_id }}">{{ row.start_timestamp_local }}</a></td>
-    <td>{{ '{:0.3f}'.format(row.distance_miles) }}</td>
-    <td>{{ '{:0.1f}'.format(row.median_speed) }}</td>
+    <td>{{ '{:0.3f}'.format(row.distance_value) }} {{ row.distance_units }}</td>
+    <td>{{ '{:0.1f}'.format(row.median_speed) }} {{ row.speed_units }}</td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
     </tr>
   {% endfor %}

@@ -90,8 +90,11 @@ class ObservationSession(db.Model):
     session_id = db.Column(UUID(as_uuid=True), primary_key=True)
     location_id = db.Column(UUID(as_uuid=True), db.ForeignKey('locations.location_id'), nullable=False)
     session_mode = db.Column(db.String(20))
-    speed_limit_mph = db.Column(db.Float)
-    distance_miles = db.Column(db.Float, nullable=False)
+    speed_limit_value = db.Column(db.Float)
+    speed_units = db.Column(db.String, nullable=False)
+    distance_meters = db.Column(db.Float, nullable=False)
+    distance_value = db.Column(db.Float, nullable=False)
+    distance_units = db.Column(db.String, nullable=False)
     session_description = db.Column(db.String)
     publish = db.Column(db.Boolean, nullable=False)
     local_timezone = db.Column(db.String, nullable=False)
@@ -105,16 +108,22 @@ class ObservationSession(db.Model):
             , location_id
             , session_mode
             , local_timezone
-            , speed_limit_mph=None
-            , distance_miles=None
+            , distance_value
+            , distance_units
+            , speed_units
+            , speed_limit_value=None
+            , distance_meters=None
             , session_description=None
         ):
 
         self.session_id = session_id
         self.location_id = location_id
         self.session_mode = session_mode
-        self.speed_limit_mph = speed_limit_mph
-        self.distance_miles = distance_miles
+        self.speed_limit_value = speed_limit_value
+        self.distance_meters = distance_meters
+        self.distance_value = distance_value
+        self.distance_units = distance_units
+        self.speed_units = speed_units
         self.session_description = session_description
         self.local_timezone = local_timezone
 

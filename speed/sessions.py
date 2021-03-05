@@ -37,7 +37,8 @@ def edit_session_settings():
         # New session
 
         form = SessionSettingsForm(
-            speed_limit_mph=20
+            speed_limit_value=20
+            , speed_units='miles_per_hour'
             , distance_value=100
             , distance_units='feet'
             , session_mode='pair'
@@ -47,7 +48,7 @@ def edit_session_settings():
 
             session_id = models.generate_uuid()
 
-            distance_miles = convert_distance_units(form.distance_value.data, form.distance_units.data)
+            distance_meters = utilities.convert_distance_to_meters(form.distance_value.data, form.distance_units.data)
 
             local_timezone = models.get_location_timezone(location_id)
 
@@ -55,8 +56,11 @@ def edit_session_settings():
                 session_id=session_id
                 , location_id=location_id
                 , session_mode=form.session_mode.data
-                , speed_limit_mph=form.speed_limit_mph.data
-                , distance_miles=distance_miles
+                , speed_limit_value=form.speed_limit_value.data
+                , speed_units=form.speed_units.data
+                , distance_meters=distance_meters
+                , distance_value=form.distance_value.data
+                , distance_units=form.distance_units.data
                 , session_description=form.session_description.data
                 , local_timezone=local_timezone
                 )
@@ -73,23 +77,27 @@ def edit_session_settings():
         settings = settings_df.squeeze()
 
         form = SessionSettingsForm(
-            speed_limit_mph=settings['speed_limit_mph']
-            , distance_value=settings['distance_miles']
-            , distance_units='miles'
+            speed_limit_value=settings['speed_limit_value']
+            , speed_units=settings['speed_units']
+            , distance_value=settings['distance_value']
+            , distance_units=settings['distance_units']
             , session_mode=settings['session_mode']
             , session_description=settings['session_description']
             )
 
         if form.validate_on_submit():
 
-            distance_miles = convert_distance_units(form.distance_value.data, form.distance_units.data)
+            distance_meters = utilities.convert_distance_to_meters(form.distance_value.data, form.distance_units.data)
 
             with open(os.path.join(app.root_path, 'queries/sessions_update.sql'), 'r') as f:
                 result = db.engine.execute(
                     text(f.read())
                     , session_id=session_id
-                    , distance_miles=distance_miles
-                    , speed_limit_mph=form.speed_limit_mph.data
+                    , distance_meters=distance_meters
+                    , distance_value=form.distance_value.data
+                    , distance_units=form.distance_units.data                    
+                    , speed_limit_value=form.speed_limit_value.data
+                    , speed_units=form.speed_units.data
                     , session_mode=form.session_mode.data
                     , session_description=form.session_description.data
                     , updated_at=utilities.now_utc()
@@ -107,18 +115,6 @@ def edit_session_settings():
 
 
 
-def convert_distance_units(value, unit):
-    """
-    Return a distance value in miles
-    """
-
-    if unit == 'feet':
-        return value / 5280
-    else:
-        return value
-
-
-
 @app.route('/session_list', methods=['GET'])
 def list_sessions():
     """
@@ -129,7 +125,6 @@ def list_sessions():
         sessions = pd.read_sql(text(f.read()), db.session.bind)
 
     if len(sessions) > 0:
-
         sessions = utilities.format_in_local_time(
             sessions, 'first_start', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M:%S %p %Z')
 
@@ -222,6 +217,9 @@ def session_handler():
 
     session['session_id'] = session_id
 
+    with open(os.path.join(app.root_path, 'queries/sessions_one.sql'), 'r') as f:
+        this_settings = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id}).squeeze()
+
     with open(os.path.join(app.root_path, 'queries/observations_list.sql'), 'r') as f:
         observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
@@ -237,8 +235,6 @@ def session_handler():
         vehicle_count = 0
         max_speed = 0
         median_speed = 0
-        speed_limit_mph = 0
-        distance_miles = 0
 
     elif len(observations) == 1 and len(completed_observations) == 0:
         # first time through, timer_status = 'vehicle_in_timer'
@@ -246,12 +242,17 @@ def session_handler():
         vehicle_count = 0
         max_speed = 0
         median_speed = 0
-        speed_limit_mph = observations.speed_limit_mph.median()
-        distance_miles = observations.distance_miles.median()
 
     else:
 
-        completed_observations['mph'] = completed_observations['distance_miles'] / (completed_observations['elapsed_seconds'] / 60 / 60)
+        completed_observations['speed_value'] = completed_observations.apply(
+            lambda row: utilities.convert_speed_for_display(
+                row.distance_meters
+                , row.elapsed_seconds
+                , row.speed_units
+                )
+            , axis=1
+            )
 
         completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
         completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
@@ -259,10 +260,10 @@ def session_handler():
 
         valid_observations = completed_observations[completed_observations.observation_valid].copy()
         vehicle_count = len(valid_observations)
-        max_speed = valid_observations.mph.max()
-        median_speed = valid_observations.mph.median()
-        distance_miles = observations.distance_miles.median()
-        speed_limit_mph = observations.speed_limit_mph.median()
+        max_speed = valid_observations.speed_value.max()
+        median_speed = valid_observations.speed_value.median()
+        
+        speed_limit_value = observations.speed_limit_value.median()
 
     return render_template(
         'session.html'
@@ -271,8 +272,10 @@ def session_handler():
         , vehicle_count=vehicle_count
         , max_speed=max_speed
         , median_speed=median_speed
-        , speed_limit_mph=speed_limit_mph
-        , distance_miles=distance_miles
+        , speed_limit_value=this_settings['speed_limit_value']
+        , speed_units=this_settings['speed_units']
+        , distance_value=this_settings['distance_value']
+        , distance_units=this_settings['distance_units']
         , df=completed_observations
         )
 
@@ -313,17 +316,24 @@ def create_histogram(session_id):
     with open(os.path.join(app.root_path, 'queries/observations_histogram.sql'), 'r') as f:
         session_observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
-    session_observations['mph'] = session_observations['distance_miles'] / (session_observations['elapsed_seconds'] / 60 / 60)
+    session_observations['speed_value'] = session_observations.apply(
+        lambda row: utilities.convert_speed_for_display(
+            row.distance_meters
+            , row.elapsed_seconds
+            , row.speed_units
+            )
+        , axis=1
+        )
 
     fig = Figure()
     fig.set_size_inches(5, 4)
     axis = fig.add_subplot(1, 1, 1)
-    axis.hist(session_observations['mph'])
+    axis.hist(session_observations['speed_value'])
 
     axis.yaxis.set_major_locator(MaxNLocator(integer=True))
     axis.set_title('Histogram of Observed Speeds')
     axis.set_ylabel('Count of Vehicles')
-    axis.set_xlabel('MPH')
+    axis.set_xlabel(session_observations['speed_units'][0])
 
     return fig
 

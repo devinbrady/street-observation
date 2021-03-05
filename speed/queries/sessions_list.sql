@@ -1,7 +1,9 @@
 
 select
 s.session_id
-, s.distance_miles
+, s.distance_meters
+, s.distance_value
+, s.distance_units
 , s.session_description
 , loc.location_id
 , loc.location_name

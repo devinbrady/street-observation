@@ -10,6 +10,7 @@
   <thead>
   <tr>
     <th scope="col">Location Name</th>
+    <th scope="col">Most Recent Observation</th>
     <th scope="col">Number of Sessions</th>
     <th scope="col">Number of Valid Observations</th>
   </tr>
@@ -18,6 +19,7 @@
   {% for _, row in locations.iterrows() %}
     <tr scope="row">
     <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_name }}</a></td>
+    <td>{{ row.most_recent_observation_local }}</td>
     <td>{{ '%0.0f'|format(row.num_sessions|float) }}</td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
     </tr>

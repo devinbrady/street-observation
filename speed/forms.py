@@ -16,10 +16,17 @@ class SessionSettingsForm(FlaskForm):
         , render_kw={'class': 'form-control'}
     )
 
-    speed_limit_mph = IntegerField(
-        'Speed Limit (mph)'
+    speed_limit_value = IntegerField(
+        'Speed Limit Value'
         , render_kw={'class': 'form-control'}
         )
+
+    speed_units = SelectField(
+        'Speed Units'
+        , [DataRequired()]
+        , choices=['miles_per_hour', 'kilometers_per_hour', 'feet_per_second', 'meters_per_second']
+        , render_kw={'class': 'form-control'}
+    )
 
     distance_value = DecimalField(
         'Distance'
@@ -30,7 +37,7 @@ class SessionSettingsForm(FlaskForm):
     distance_units = SelectField(
         'Distance Units'
         , [DataRequired()]
-        , choices=['feet', 'miles']
+        , choices=['feet', 'miles', 'meters', 'kilometers']
         , render_kw={'class': 'form-control'}
     )
 

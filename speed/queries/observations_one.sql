@@ -5,8 +5,11 @@ o.start_time
 , o.elapsed_seconds
 , o.observation_valid
 , s.session_id
-, s.distance_miles
-, s.speed_limit_mph
+, s.distance_meters
+, s.distance_value
+, s.distance_units
+, s.speed_units
+, s.speed_limit_value
 , s.location_id
 , o.local_timezone
 

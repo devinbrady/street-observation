@@ -5,6 +5,7 @@ loc.location_id
 , loc.location_name
 , loc.local_timezone
 , min(coalesce(o.start_time, loc.created_at)) as first_start
+, max(o.start_time) as most_recent_observation
 , count(distinct s.session_id) as num_sessions
 , count(distinct o.observation_id) as num_observations
 

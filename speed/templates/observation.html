@@ -12,10 +12,10 @@
     <li>Location ID: {{ location_id }}</li>
     <li>Observation Start Date: {{ start_date_local }}</li>
     <li>Observation Start Time: {{ start_time_local }}</li>
-    <li>Distance in Miles: {{ '%0.3f'|format(distance_miles|float) }}</li>
+    <li>Distance: {{ '%0.3f'|format(distance_value|float) }} {{ distance_units }}</li>
     <li>Elapsed Seconds: {{ '%0.1f'|format(elapsed_seconds|float) }}</li>
-    <li>Miles per Hour: {{ '%0.1f'|format(mph|float) }}</li>
-    <li>Speed Limit: {{ '%0.0f'|format(speed_limit_mph|float) }}</li>
+    <li>Vehicle Speed: {{ '%0.1f'|format(speed_value|float) }} {{ speed_units }}</li>
+    <li>Speed Limit: {{ '%0.0f'|format(speed_limit_value|float) }} {{ speed_units }}</li>
     <li>Valid: {{ observation_valid }}</li>
   </ul>
 

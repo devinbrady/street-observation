@@ -94,8 +94,8 @@ $(document).ready(function(){
     <li>Vehicle Count: {{ vehicle_count }}</li>
     <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }}</li>
     <li>Median Speed: {{ '{:0.1f}'.format(median_speed) }}</li>
-    <li>Speed Limit: {{ '{}'.format(speed_limit_mph) }}</li>
-    <li>Distance in Miles: {{ '{:0.3f}'.format(distance_miles) }}</li>
+    <li>Speed Limit: {{ '{}'.format(speed_limit_value) }} {{ speed_units }}</li>
+    <li>Distance: {{ '{:0.3f}'.format(distance_value) }} {{ distance_units }}</li>
   </ul>
 
   <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
@@ -126,7 +126,7 @@ $(document).ready(function(){
     <tr scope="row">
     <td><a href="/observation/{{ obs.observation_id }}">{{ obs.start_time_local }}</a></td>
     <td>{{ '%0.2f'|format(obs.elapsed_seconds|float) }}</td>
-    <td>{{ '%0.1f'|format(obs.mph|float) }}</td>
+    <td>{{ '%0.1f'|format(obs.speed_value|float) }} {{ obs.speed_units }}</td>
 
     <td>
     {% if obs.observation_valid %}

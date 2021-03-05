@@ -2,7 +2,10 @@
 select
 loc.location_name
 , s.session_id
-, s.distance_miles
+, s.distance_meters
+, s.distance_value
+, s.distance_units
+, s.speed_units
 , o.observation_id
 , o.elapsed_seconds
 , o.start_time

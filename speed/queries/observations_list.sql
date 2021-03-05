@@ -5,8 +5,9 @@ o.observation_id
 , o.end_time
 , o.elapsed_seconds
 , o.observation_valid
-, s.distance_miles
-, s.speed_limit_mph
+, s.distance_meters
+, s.speed_limit_value
+, s.speed_units
 , loc.location_id
 , o.local_timezone
 

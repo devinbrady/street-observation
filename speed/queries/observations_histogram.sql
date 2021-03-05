@@ -1,7 +1,8 @@
 
 select
 o.elapsed_seconds
-, s.distance_miles
+, s.distance_meters
+, s.speed_units
 
 from observations o
 inner join sessions s using (session_id)

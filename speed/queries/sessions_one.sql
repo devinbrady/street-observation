@@ -3,8 +3,11 @@
 select
 location_id
 , session_mode
-, speed_limit_mph
-, distance_miles
+, distance_meters
+, distance_value
+, distance_units
+, speed_limit_value
+, speed_units
 , session_description
 
 from sessions

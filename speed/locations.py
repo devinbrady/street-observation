@@ -105,6 +105,13 @@ def list_locations():
     with open(os.path.join(app.root_path, 'queries/locations_list.sql'), 'r') as f:
         locations = pd.read_sql(f.read(), db.session.bind)
 
+    locations = utilities.format_in_local_time(
+        locations
+        , 'most_recent_observation'
+        , 'local_timezone'
+        , 'most_recent_observation_local'
+        , '%Y-%m-%d %l:%M %p %Z'
+        )
 
     return render_template(
         'location_list.html'
@@ -132,14 +139,22 @@ def location_handler():
     if len(obs) == 0:
         sessions_at_location = pd.DataFrame()
     else:
-        obs['mph'] = obs['distance_miles'] / (obs['elapsed_seconds'] / 60 / 60)
+        obs['speed_value'] = obs.apply(
+            lambda row: utilities.convert_speed_for_display(
+                row.distance_meters
+                , row.elapsed_seconds
+                , row.speed_units
+                )
+            , axis=1
+            )
        
         sessions_at_location = obs.groupby('session_id').agg(
             session_id=('session_id', 'first')
             , start_timestamp_min=('start_time', 'min')
             , local_timezone=('local_timezone', 'first')
-            , distance_miles=('distance_miles', 'median')
-            , median_speed=('mph', 'median')
+            , distance_value=('distance_value', 'median')
+            , distance_units=('distance_units', 'first')
+            , median_speed=('speed_value', 'median')
             , num_observations=('observation_id', 'count')
             )
 
