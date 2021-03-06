@@ -22,3 +22,7 @@ def display_about():
 def display_index():
     return render_template('index.html')
 
+# @app.route('/histogram', methods=['GET'])
+# def display_histogram():
+#     return render_template('histogram.html')
+

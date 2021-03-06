@@ -195,7 +195,7 @@ class User(db.Model):
 
 
 
-class UserSessions(db.Model):
+class UserSession(db.Model):
     """
     Store information connecting a user to an observation session
     """
@@ -207,3 +207,56 @@ class UserSessions(db.Model):
     user_latitude = db.Column(db.Float)
     user_longitude = db.Column(db.Float)
     local_timezone = db.Column(db.String, nullable=False)
+
+
+
+class CounterObservation(db.Model):
+    """
+    Record info about one counter observation
+    """
+
+    __tablename__ = 'counter_observations'
+    counter_id = db.Column(UUID(as_uuid=True), primary_key=True)
+    session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
+    location_id = db.Column(UUID(as_uuid=True), db.ForeignKey('locations.location_id'), nullable=False)
+    emoji_id = db.Column(db.Integer, db.ForeignKey('emoji.emoji_id'), nullable=False)
+    observation_valid = db.Column(db.Boolean, nullable=False)
+    local_timezone = db.Column(db.String, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False)
+
+    def __init__(
+            self
+            , counter_id
+            , session_id
+            , location_id
+            , emoji_id
+            , local_timezone
+            ):
+
+        self.counter_id = counter_id
+        self.session_id = session_id
+        self.location_id = location_id
+        self.emoji_id = emoji_id
+        self.local_timezone = local_timezone
+
+        # Defaults when record created
+        utc_now = utilities.now_utc()
+        self.created_at = utc_now
+        self.updated_at = utc_now
+        self.observation_valid = True
+
+
+
+class Emoji(db.Model):
+    """
+    Each emoji that can be displayed
+    """
+
+    __tablename__ = 'emoji'
+    emoji_id = db.Column(db.Integer, primary_key=True)
+    emoji_name = db.Column(db.String, nullable=False)
+    glyph = db.Column(db.String)
+    display_order = db.Column(db.Integer)
+    
+

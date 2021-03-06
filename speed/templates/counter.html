@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Counter{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+<h1>Counter</h1>
+
+
+{% for _, row in counter_obs.iterrows() %}
+    <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
+        <button type="submit" style="font-size:80px">&#{{ row.emoji_id }} {{ row.num_observations }}</button>
+    </form>
+{% endfor %}
+
+{% endblock %}

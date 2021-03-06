@@ -1,13 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Speed Observation Project{% endblock %}
+{% block title %}Street Observation Project{% endblock %}
 {% block head %}
   {{ super() }}
 {% endblock %}
 {% block content %}
-<h1>Speed Observation Project</h1>
+<h1>Street Observation Project</h1>
+
+<p>This site allows you to collect your own observations about a street.</p>
+
+<h3>Tools</h3>
+
+<ul>
+    <li>Speed Timer: Determine how fast cars are driving by timing them over a distance.</li>
+    <li>Counter: Count the number of pedestrians, bicycles, and cars using the street.</li>
+</ul>
 
 <p><a href='/location_list'>List of Locations</a></p>
-<p><a href='/location_settings'>Create a new location</a></p>
 <p><a href='/about'>About this site</a></p>
 
 
