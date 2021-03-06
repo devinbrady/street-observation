@@ -8,9 +8,22 @@
 
 
 {% for _, row in counter_obs.iterrows() %}
-    <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
-        <button type="submit" style="font-size:80px">&#{{ row.emoji_id }} {{ row.num_observations }}</button>
-    </form>
+    <p style="font-size:80px">&#{{ row.emoji_id }} {{ row.num_observations }}
+        <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}&previous_count={{ row.num_observations }}&row_exists={{ row.row_exists }}&action=add_one" method="POST">
+            
+            <button type='submit'>+</button>
+        
+        </form>
+        
+
+        <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}&previous_count={{ row.num_observations }}&row_exists={{ row.row_exists }}&action=subtract_one" method="POST">
+            
+            <button type='submit'>-</button>
+        
+        </form>
+
+    </p>
+    
 {% endfor %}
 
 {% endblock %}

@@ -100,7 +100,7 @@ def edit_session_settings():
                     , session_id=session_id
                     , distance_meters=distance_meters
                     , distance_value=form.distance_value.data
-                    , distance_units=form.distance_units.data                    
+                    , distance_units=form.distance_units.data
                     , speed_limit_value=form.speed_limit_value.data
                     , speed_units=form.speed_units.data
                     , session_mode=form.session_mode.data
