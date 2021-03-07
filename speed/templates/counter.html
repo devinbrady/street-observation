@@ -6,24 +6,45 @@
 {% block content %}
 <h1>Counter</h1>
 
-
-{% for _, row in counter_obs.iterrows() %}
-    <p style="font-size:80px">&#{{ row.emoji_id }} {{ row.num_observations }}
-        <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}&previous_count={{ row.num_observations }}&row_exists={{ row.row_exists }}&action=add_one" method="POST">
-            
-            <button type='submit'>+</button>
-        
-        </form>
-        
-
-        <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}&previous_count={{ row.num_observations }}&row_exists={{ row.row_exists }}&action=subtract_one" method="POST">
-            
-            <button type='submit'>-</button>
-        
-        </form>
-
-    </p>
-    
+{% for _, row in emoji_count.iterrows() %}
+    <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
+        <button type="submit" style="font-size:80px">&#{{ row.emoji_id }} {{ '{:.0f}'.format(row.num_observations) }}</button>
+    </form>
 {% endfor %}
+
+
+<h2>Observed Emoji</h2>
+  <table class="table">
+  <thead>
+  <tr>
+    <th scope="col">Time</th>
+    <th scope="col">Emoji</th>
+    <th scope="col">Valid</th>
+  </tr>
+  </thead>
+  <tbody>
+
+{% for _, obs in emoji_observations.iterrows() %}
+    <tr scope="row">
+    <td>{{ obs.start_time_local }}</td>
+    <td>&#{{ obs.emoji_id }}</td>
+
+    <td>
+    {% if obs.observation_valid %}
+    <form action="/emoji_validity?session_id={{ session_id }}&location_id={{ location_id }}&counter_id={{ obs.counter_id }}&valid_action=False" method="POST">
+      <button type="submit" class="btn btn-primary">Valid</button>
+    </form>
+    {% else %}
+    <form action="/emoji_validity?session_id={{ session_id }}&location_id={{ location_id }}&counter_id={{ obs.counter_id }}&valid_action=True" method="POST">
+      <button type="submit" class="btn btn-outline-primary">Invalid</button>
+    </form>
+    {% endif %}
+    </td>
+
+    </tr>
+{% endfor %}
+
+</tbody>
+</table>
 
 {% endblock %}

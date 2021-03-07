@@ -13,16 +13,38 @@ from . import utilities
 
 @app.route('/counter', methods=['GET'])
 def counter_handler():
+    """
+    Handle the GET on the counter page
+    """
 
     session_id = request.args.get('session_id')
     location_id = request.args.get('location_id')
 
-    with open(os.path.join(app.root_path, 'queries/counter_session.sql'), 'r') as f:
-        counter_obs = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
+    with open(os.path.join(app.root_path, 'queries/emoji_list.sql'), 'r') as f:
+        emoji_list = pd.read_sql(text(f.read()), db.session.bind)
+
+
+    with open(os.path.join(app.root_path, 'queries/emoji_observations.sql'), 'r') as f:
+        emoji_observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
+
+    emoji_observations = utilities.format_in_local_time(emoji_observations, 'created_at', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
+
+    # Count the number of observations by the emoji that have been seen
+    emoji_observation_count = (
+        emoji_observations[emoji_observations.observation_valid]
+        .groupby('emoji_id')
+        .agg(num_observations=('counter_id', 'count'))
+        .reset_index()
+        )
+
+    # Left join to the list of all emoji, to show zero for those not yet seen
+    emoji_count = pd.merge(emoji_list, emoji_observation_count, how='left', on='emoji_id').sort_values(by='display_order')
+    emoji_count['num_observations'] = emoji_count['num_observations'].fillna(0)
 
     return render_template(
         'counter.html'
-        , counter_obs=counter_obs
+        , emoji_count=emoji_count
+        , emoji_observations=emoji_observations
         , session_id=session_id
         , location_id=location_id
         )
@@ -31,52 +53,59 @@ def counter_handler():
 
 @app.route('/emoji', methods=['POST'])
 def emoji_post():
+    """
+    Note the observation of a new emoji out on the street
+    """
 
     session_id = request.args.get('session_id')
     location_id = request.args.get('location_id')
     emoji_id = request.args.get('emoji_id')
-    previous_count = int(request.args.get('previous_count'))
-    action = request.args.get('action')
-    row_exists = int(request.args.get('row_exists'))
 
-    local_timezone = 'America/New_York' # todo: models.get_location_timezone(location_id)
+    local_timezone = models.get_location_timezone(location_id)
     
-    if previous_count == 0 and action == 'subtract_one':
-        # Do nothing. We don't want to record a negative count
-        pass
+    new_counter_observation = models.CounterObservation(
+        counter_id=models.generate_uuid()
+        , session_id=session_id
+        , location_id=location_id
+        , emoji_id=int(emoji_id)
+        , local_timezone=local_timezone
+        )
 
-    else:
-
-        if row_exists == 1:
-
-            if action == 'add_one':
-                increment_value = 1
-            elif action == 'subtract_one':
-                increment_value = -1
-
-            with open(os.path.join(app.root_path, 'queries/update_emoji_counter.sql'), 'r') as f:
-                result = db.engine.execute(
-                    text(f.read())
-                    , session_id=session_id
-                    , emoji_id=emoji_id
-                    , previous_count=previous_count
-                    , increment_value=increment_value
-                    , last_observed_at=utilities.now_utc()
-                    )
-
-        else:
-            # row doesn't exist yet, insert it
-
-            new_counter_observation = models.EmojiCounter(
-                session_id=session_id
-                , location_id=location_id
-                , emoji_id=int(emoji_id)
-                , local_timezone=local_timezone
-                )
-
-            db.session.add(new_counter_observation)
-            db.session.commit()
-
+    db.session.add(new_counter_observation)
+    db.session.commit()
 
     return redirect(f'/counter?location_id={location_id}&session_id={session_id}')
 
+
+
+@app.route('/emoji_validity', methods=['POST'])
+def emoji_validity():
+    """
+    Handle the request to change the validity of an emoji observation
+    """
+
+    location_id = request.args.get('location_id')
+    session_id = request.args.get('session_id')
+    counter_id = request.args.get('counter_id')
+    valid_action = request.args.get('valid_action')
+
+    toggle_valid_counter(counter_id, valid_action)
+
+    return redirect(f'/counter?location_id={location_id}&session_id={session_id}')
+
+
+def toggle_valid_counter(counter_id, valid_action):
+    """
+    Change the validation status of a single emoji observation
+    """
+
+    with open(os.path.join(app.root_path, 'queries/emoji_observation_update.sql'), 'r') as f:
+
+        result = db.engine.execute(
+            text(f.read())
+            , valid_action=valid_action
+            , counter_id=counter_id
+            , updated_at=utilities.now_utc()
+            )
+        
+    # How to confirm this?

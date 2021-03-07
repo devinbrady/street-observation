@@ -61,7 +61,7 @@ def one_observation(observation_id):
 
 def toggle_valid(observation_id, valid_action):
     """
-    Change the validation status of a single observation in the database
+    Change the validation status of a single observation
     """
 
     with open(os.path.join(app.root_path, 'queries/observations_update.sql'), 'r') as f:
