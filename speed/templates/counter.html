@@ -6,12 +6,21 @@
 {% block content %}
 <h1>Counter</h1>
 
-{% for _, row in emoji_count.iterrows() %}
-    <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
-        <button type="submit" style="font-size:80px">&#{{ row.emoji_id }} {{ '{:.0f}'.format(row.num_observations) }}</button>
-    </form>
-{% endfor %}
-
+<div class="container px-4">
+    <div class="row row-cols-2">
+    {% for _, row in emoji_count.iterrows() %}
+        <div class="col p-3">
+            <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary" style="font-size:60px">
+                        &#{{ row.emoji_id }} {{ row.num_observations }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    {% endfor %}
+    </div>
+</div>
 
 <h2>Observed Emoji</h2>
   <table class="table">
@@ -27,7 +36,7 @@
 {% for _, obs in emoji_observations.iterrows() %}
     <tr scope="row">
     <td>{{ obs.start_time_local }}</td>
-    <td>&#{{ obs.emoji_id }}</td>
+    <td style="font-size:30px">&#{{ obs.emoji_id }}</td>
 
     <td>
     {% if obs.observation_valid %}

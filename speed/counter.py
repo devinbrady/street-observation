@@ -94,6 +94,7 @@ def emoji_validity():
     return redirect(f'/counter?location_id={location_id}&session_id={session_id}')
 
 
+
 def toggle_valid_counter(counter_id, valid_action):
     """
     Change the validation status of a single emoji observation
