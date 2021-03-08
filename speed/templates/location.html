@@ -21,10 +21,11 @@
   <table class="table">
   <thead>
   <tr>
-    <th scope="col">Date and Time</th>
+    <th scope="col">Session Date and Time</th>
     <th scope="col">Distance</th>
     <th scope="col">Median Speed</th>
     <th scope="col">Number of Observations</th>
+    <th scope="col">Description</th>
   </tr>
   </thead>
   <tbody>
@@ -34,6 +35,7 @@
     <td>{{ '{:0.3f}'.format(row.distance_value) }} {{ row.distance_units }}</td>
     <td>{{ '{:0.1f}'.format(row.median_speed) }} {{ row.speed_units }}</td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
+    <td>{{ row.session_description) }}</td>
     </tr>
   {% endfor %}
 </table>

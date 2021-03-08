@@ -22,6 +22,8 @@
     </div>
 </div>
 
+<p><a href='/session_settings?session_id={{ session_id }}&location_id={{ location_id }}'>Edit session</a></p>
+
 <h2>Observed Emoji</h2>
   <table class="table">
   <thead>
@@ -39,15 +41,15 @@
     <td style="font-size:30px">&#{{ obs.emoji_id }}</td>
 
     <td>
-    {% if obs.observation_valid %}
-    <form action="/emoji_validity?session_id={{ session_id }}&location_id={{ location_id }}&counter_id={{ obs.counter_id }}&valid_action=False" method="POST">
-      <button type="submit" class="btn btn-primary">Valid</button>
-    </form>
-    {% else %}
-    <form action="/emoji_validity?session_id={{ session_id }}&location_id={{ location_id }}&counter_id={{ obs.counter_id }}&valid_action=True" method="POST">
-      <button type="submit" class="btn btn-outline-primary">Invalid</button>
-    </form>
-    {% endif %}
+        {% if obs.observation_valid %}
+        <form action="/emoji_validity?session_id={{ session_id }}&location_id={{ location_id }}&counter_id={{ obs.counter_id }}&valid_action=False" method="POST">
+          <button type="submit" class="btn btn-primary">Valid</button>
+        </form>
+        {% else %}
+        <form action="/emoji_validity?session_id={{ session_id }}&location_id={{ location_id }}&counter_id={{ obs.counter_id }}&valid_action=True" method="POST">
+          <button type="submit" class="btn btn-outline-primary">Invalid</button>
+        </form>
+        {% endif %}
     </td>
 
     </tr>

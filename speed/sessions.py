@@ -45,7 +45,7 @@ def edit_session_settings():
             , speed_units='miles per hour'
             , distance_value=100
             , distance_units='feet'
-            , session_mode='timer'
+            , session_mode='speed timer'
             , publish=False
             )
     
@@ -73,7 +73,10 @@ def edit_session_settings():
             db.session.add(new_session_object)
             db.session.commit()
 
-            return redirect(f'session?session_id={session_id}')
+            if form.session_mode.data == 'speed timer':
+                return redirect(f'session?session_id={session_id}')
+            elif form.session_mode.data == 'counter':
+                return redirect(f'counter?session_id={session_id}&location_id={location_id}')
 
     else:
         # Existing session
@@ -109,7 +112,10 @@ def edit_session_settings():
                     , updated_at=utilities.now_utc()
                     )
 
-            return redirect(f'session?session_id={session_id}')
+            if form.session_mode.data == 'speed timer':
+                return redirect(f'session?session_id={session_id}')
+            elif form.session_mode.data == 'counter':
+                return redirect(f'counter?session_id={session_id}&location_id={location_id}')
 
     
     return render_template(

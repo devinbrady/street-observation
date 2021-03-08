@@ -147,13 +147,14 @@ def location_handler():
             session_id=('session_id', 'first')
             , start_timestamp_min=('start_time', 'min')
             , local_timezone=('local_timezone', 'first')
+            , session_description=('session_description', 'first')
             , distance_value=('distance_value', 'median')
             , distance_units=('distance_units', 'first')
             , median_speed=('speed_value', 'median')
             , num_observations=('observation_id', 'count')
             )
 
-        sessions_at_location = utilities.format_in_local_time(sessions_at_location, 'start_timestamp_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M:%S %p %Z')
+        sessions_at_location = utilities.format_in_local_time(sessions_at_location, 'start_timestamp_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M %p %Z')
         sessions_at_location = sessions_at_location.sort_values(by='start_timestamp_min', ascending=False)
 
 

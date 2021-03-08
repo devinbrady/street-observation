@@ -8,8 +8,10 @@ from . import db
 from . import utilities
 
 
+
 def generate_uuid():
     return str(uuid.uuid4())
+
 
 
 def get_location_timezone(location_id):

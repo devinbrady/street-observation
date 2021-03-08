@@ -27,19 +27,28 @@ def counter_handler():
     with open(os.path.join(app.root_path, 'queries/emoji_observations.sql'), 'r') as f:
         emoji_observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
-    emoji_observations = utilities.format_in_local_time(emoji_observations, 'created_at', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
+    if len(emoji_observations) > 0:
+        emoji_observations = utilities.format_in_local_time(emoji_observations, 'created_at', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
 
-    # Count the number of observations by the emoji that have been seen
-    emoji_observation_count = (
-        emoji_observations[emoji_observations.observation_valid]
-        .groupby('emoji_id')
-        .agg(num_observations=('counter_id', 'count'))
-        .reset_index()
-        )
+        # Count the number of observations by the emoji that have been seen
+        emoji_observation_count = (
+            emoji_observations[emoji_observations.observation_valid]
+            .groupby('emoji_id')
+            .agg(num_observations=('counter_id', 'count'))
+            .reset_index()
+            )
 
-    # Left join to the list of all emoji, to show zero for those not yet seen
-    emoji_count = pd.merge(emoji_list, emoji_observation_count, how='left', on='emoji_id').sort_values(by='display_order')
-    emoji_count['num_observations'] = emoji_count['num_observations'].fillna(0)
+        # Left join to the list of all emoji, to show zero for those not yet seen
+        emoji_count = pd.merge(emoji_list, emoji_observation_count, how='left', on='emoji_id').sort_values(by='display_order')
+        emoji_count['num_observations'] = emoji_count['num_observations'].fillna(0).astype(int)
+
+    else:
+        # No emoji observed yet
+
+        emoji_count = emoji_list.copy()
+        emoji_count['num_observations'] = 0
+
+        emoji_observations = pd.DataFrame()
 
     return render_template(
         'counter.html'

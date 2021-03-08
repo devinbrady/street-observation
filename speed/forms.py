@@ -11,8 +11,12 @@ class SessionSettingsForm(FlaskForm):
 
     session_mode = SelectField(
         'Session Mode'
-        # , [DataRequired()]
-        , choices=['timer', 'radar']
+        , [DataRequired()]
+        , choices=[
+            'speed timer'
+            # , 'speed radar'
+            , 'counter'
+            ]
         , render_kw={'class': 'form-control'}
     )
 
