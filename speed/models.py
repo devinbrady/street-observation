@@ -262,39 +262,3 @@ class Emoji(db.Model):
     display_order = db.Column(db.Integer)
     
 
-
-class EmojiCounter(db.Model):
-    """
-    Increment and decrement counts of emoji seen at an observation
-    """
-
-    __tablename__ = 'emoji_counter'
-    session_emoji = db.Column(db.String, primary_key=True)
-    session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
-    location_id = db.Column(UUID(as_uuid=True), db.ForeignKey('locations.location_id'), nullable=False)
-    emoji_id = db.Column(db.Integer, db.ForeignKey('emoji.emoji_id'), nullable=False)
-    local_timezone = db.Column(db.String, nullable=False)
-    first_observed_at = db.Column(db.DateTime(timezone=True), nullable=False)
-    last_observed_at = db.Column(db.DateTime(timezone=True), nullable=False)
-    counter = db.Column(db.Integer, nullable=False)
-
-    def __init__(
-            self
-            , session_id
-            , location_id
-            , emoji_id
-            , local_timezone
-            ):
-
-        self.session_emoji = session_id + '__' + str(emoji_id)
-        self.session_id = session_id
-        self.location_id = location_id
-        self.emoji_id = emoji_id
-        self.local_timezone = local_timezone
-
-        # Defaults when record created
-        utc_now = utilities.now_utc()
-        self.first_observed_at = utc_now
-        self.last_observed_at = utc_now
-        self.counter = 1
-
