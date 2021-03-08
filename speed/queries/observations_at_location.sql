@@ -6,7 +6,7 @@ loc.location_name
 , s.distance_value
 , s.distance_units
 , s.speed_units
-, s.description
+, s.session_description
 , o.observation_id
 , o.elapsed_seconds
 , o.start_time

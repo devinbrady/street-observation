@@ -128,6 +128,8 @@ def location_handler():
 
     this_location = utilities.one_location(location_id)
 
+
+    # Speed observation sessions that have occurred at this location
     with open(os.path.join(app.root_path, 'queries/observations_at_location.sql'), 'r') as f:
         obs = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
 
@@ -146,6 +148,7 @@ def location_handler():
         sessions_at_location = obs.groupby('session_id').agg(
             session_id=('session_id', 'first')
             , start_timestamp_min=('start_time', 'min')
+            , start_timestamp_max=('start_time', 'max')
             , local_timezone=('local_timezone', 'first')
             , session_description=('session_description', 'first')
             , distance_value=('distance_value', 'median')
@@ -154,10 +157,33 @@ def location_handler():
             , num_observations=('observation_id', 'count')
             )
 
+        sessions_at_location['session_duration_minutes'] = (sessions_at_location['start_timestamp_max'] - sessions_at_location['start_timestamp_min']).dt.total_seconds() / 60
         sessions_at_location = utilities.format_in_local_time(sessions_at_location, 'start_timestamp_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M %p %Z')
         sessions_at_location = sessions_at_location.sort_values(by='start_timestamp_min', ascending=False)
+        
 
 
+    # Counter sessions that have occurred at this location
+    with open(os.path.join(app.root_path, 'queries/counter_observations_at_location.sql'), 'r') as f:
+        counter_obs = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
+
+    if len(counter_obs) == 0:
+        counter_sessions_at_location = pd.DataFrame()
+    else:
+
+        counter_sessions_at_location = counter_obs.groupby('session_id').agg(
+            session_id=('session_id', 'first')
+            , created_at_min=('created_at', 'min')
+            , created_at_max=('created_at', 'max')
+            , local_timezone=('local_timezone', 'first')
+            , session_description=('session_description', 'first')
+            , most_common_emoji=('emoji_id', 'max') #todo: make this the actual highest count
+            , num_observations=('counter_id', 'count')
+            )
+
+        counter_sessions_at_location['session_duration_minutes'] = (counter_sessions_at_location['created_at_max'] - counter_sessions_at_location['created_at_min']).dt.total_seconds() / 60
+        counter_sessions_at_location = utilities.format_in_local_time(counter_sessions_at_location, 'created_at_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M %p %Z')
+        counter_sessions_at_location = counter_sessions_at_location.sort_values(by='created_at_min', ascending=False)
 
 
     return render_template(
@@ -171,6 +197,7 @@ def location_handler():
         , zip_code=this_location['zip_code']
         , location_description=this_location['location_description']
         , sessions_at_location=sessions_at_location
+        , counter_sessions_at_location=counter_sessions_at_location
         )
 
 
