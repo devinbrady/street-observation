@@ -16,7 +16,12 @@ def format_in_local_time(df, timestamp_column, tz_column, output_column, output_
     Render a TZ-aware UTC column in a local timezone per the format specified
     """
 
-    for idx, row in df.iterrows():
+    # Default output value is an empty string
+    df[output_column] = ''
+
+    # Convert timezone for non-null timestamps
+    for idx, row in df[df[timestamp_column].notnull()].iterrows():
+
         df.loc[idx, output_column] = row[timestamp_column].astimezone(row[tz_column]).strftime(output_format)
 
     # df[output_column] = df.groupby(tz_column)[timestamp_column].transform(lambda x: x.dt.tz_convert(x.name))
