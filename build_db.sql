@@ -23,7 +23,6 @@ CREATE TABLE locations (
 );
 
 
-
 drop table if exists sessions cascade;
 
 CREATE TABLE sessions (
@@ -57,3 +56,41 @@ CREATE TABLE observations (
     end_time timestamp with time zone,
     updated_at timestamp with time zone NOT NULL
 );
+
+
+drop table if exists counter_observations;
+
+CREATE TABLE counter_observations (
+    counter_id uuid PRIMARY KEY,
+    session_id uuid NOT NULL REFERENCES sessions(session_id),
+    location_id uuid NOT NULL REFERENCES locations(location_id),
+    emoji_id integer NOT NULL,
+    observation_valid boolean NOT NULL,
+    local_timezone character varying NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+
+
+CREATE TABLE emoji (
+    emoji_id SERIAL PRIMARY KEY,
+    emoji_name character varying NOT NULL,
+    glyph character varying,
+    display_order integer
+);
+
+
+
+insert into emoji (emoji_id, emoji_name, glyph, display_order)
+    values 
+    (128694, 'person-walking', '🚶', 1)
+    , (128021, 'dog', '🐕', 2)
+    , (128690, 'bicycle', '🚲', 3)
+    , (128756, 'kick-scooter', '🛴', 4)
+    , (127949, 'motorcycle', '🏍', 5)
+    , (128652, 'bus', '🚌', 6)
+    , (128663, 'automobile', '🚗', 7)
+    , (128666, 'delivery-truck', '🚚', 8)
+    ;
+
+
