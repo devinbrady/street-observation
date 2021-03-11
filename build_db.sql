@@ -76,21 +76,23 @@ CREATE TABLE emoji (
     emoji_id SERIAL PRIMARY KEY,
     emoji_name character varying NOT NULL,
     glyph character varying,
-    display_order integer
+    display_order integer,
+    emoji_description character varying    
 );
 
 
 
-insert into emoji (emoji_id, emoji_name, glyph, display_order)
+insert into emoji (emoji_id, emoji_name, glyph, display_order, emoji_description)
     values 
-    (128694, 'person-walking', '🚶', 1)
-    , (128021, 'dog', '🐕', 2)
-    , (128690, 'bicycle', '🚲', 3)
-    , (128756, 'kick-scooter', '🛴', 4)
-    , (127949, 'motorcycle', '🏍', 5)
-    , (128652, 'bus', '🚌', 6)
-    , (128663, 'automobile', '🚗', 7)
-    , (128666, 'delivery-truck', '🚚', 8)
+    (128694, 'person-walking', '🚶', 0, 'A person walking, of any age')
+    , (9855, 'wheelchair-symbol', '♿️', 1, 'A wheelchair, whether motorized or not')
+    , (128021, 'dog', '🐕', 2, 'A dog')
+    , (128690, 'bicycle', '🚲', 3, 'A bicycle or e-bike')
+    , (128756, 'kick-scooter', '🛴', 4, 'A kick scooter, whether electric or not')
+    , (127949, 'motorcycle', '🏍', 5, 'A motorcycle or moped')
+    , (128652, 'bus', '🚌', 6, 'A bus')
+    , (128663, 'automobile', '🚗', 7, 'A car, van, SUV, or pickup truck')
+    , (128666, 'delivery-truck', '🚚', 8, 'A delivery truck or semi truck')
     ;
 
 

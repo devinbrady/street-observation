@@ -260,5 +260,5 @@ class Emoji(db.Model):
     emoji_name = db.Column(db.String, nullable=False)
     glyph = db.Column(db.String)
     display_order = db.Column(db.Integer)
-    
+    emoji_description = db.Column(db.String)
 
