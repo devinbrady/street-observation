@@ -18,7 +18,7 @@ def counter_handler():
     """
 
     session_id = request.args.get('session_id')
-    location_id = request.args.get('location_id')
+    this_session = utilities.one_session(session_id)
 
     with open(os.path.join(app.root_path, 'queries/emoji_list.sql'), 'r') as f:
         available_emoji = pd.read_sql(text(f.read()), db.session.bind)
@@ -44,6 +44,7 @@ def counter_handler():
         if len(emoji_observations) == 1:
             # Only one emoji has been observed, the session has no duration yet, so the per-hour calculation can't be done
             emoji_count['observations_per_hour'] = 0
+            session_duration_hours = 0
 
         else:
             # Calculate the duration of this session so far
@@ -61,15 +62,19 @@ def counter_handler():
         emoji_count = available_emoji.copy()
         emoji_count['num_observations'] = 0
         emoji_count['observations_per_hour'] = 0
+        session_duration_hours = 0
 
         emoji_observations = pd.DataFrame()
+
 
     return render_template(
         'counter.html'
         , emoji_count=emoji_count
         , emoji_observations=emoji_observations
         , session_id=session_id
-        , location_id=location_id
+        , location_id=this_session['location_id']
+        , location_name=this_session['location_name']
+        , session_duration_hours=session_duration_hours
         )
 
 

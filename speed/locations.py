@@ -117,6 +117,7 @@ def list_locations():
         )
 
 
+
 @app.route('/location', methods=['GET'])
 def location_handler():
 
@@ -171,15 +172,27 @@ def location_handler():
         counter_sessions_at_location = pd.DataFrame()
     else:
 
+        # Within each session, rank emoji by the number of observations. Break ties with display_order (pedestrians first, trucks last)
+        emoji_by_session = counter_obs.groupby(['session_id', 'glyph']).agg(
+            num_observations=('counter_id', 'count')
+            , display_order=('display_order', 'first')
+            ).sort_values(by=['session_id', 'display_order'])
+        emoji_by_session_rank = emoji_by_session.groupby('session_id')['num_observations'].rank(method='first', ascending=False)
+        emoji_by_session_rank.name = 'emoji_rank'
+        df = pd.DataFrame(emoji_by_session_rank[emoji_by_session_rank <= 3]).reset_index().sort_values(by=['session_id', 'emoji_rank'])
+        common_emoji_df = df.groupby('session_id')['glyph'].apply(', '.join).reset_index()
+        common_emoji_df = common_emoji_df.rename(columns={'glyph': 'most_common_emoji'})
+
+        # Calculate other stats about each counter observation session
         counter_sessions_at_location = counter_obs.groupby('session_id').agg(
-            session_id=('session_id', 'first')
-            , created_at_min=('created_at', 'min')
+            created_at_min=('created_at', 'min')
             , created_at_max=('created_at', 'max')
             , local_timezone=('local_timezone', 'first')
             , session_description=('session_description', 'first')
-            , most_common_emoji=('emoji_id', 'max') #todo: make this the actual highest count
             , num_observations=('counter_id', 'count')
-            )
+            ).reset_index()
+
+        counter_sessions_at_location = pd.merge(counter_sessions_at_location, common_emoji_df, how='inner', on='session_id')
 
         counter_sessions_at_location['session_duration_minutes'] = (counter_sessions_at_location['created_at_max'] - counter_sessions_at_location['created_at_min']).dt.total_seconds() / 60
         counter_sessions_at_location = utilities.format_in_local_time(counter_sessions_at_location, 'created_at_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M %p %Z')

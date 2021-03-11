@@ -219,7 +219,7 @@ def broadcast_end(message):
 
 
 
-@app.route('/session', methods=['GET', 'POST'])
+@app.route('/session', methods=['GET'])
 def session_handler():
 
     session_id = request.args.get('session_id')
