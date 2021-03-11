@@ -4,6 +4,7 @@ import pandas as pd
 from sqlalchemy import text
 from flask import current_app as app
 from flask import render_template, request, redirect
+from flask_login import login_required
 
 from . import db
 from . import models
@@ -12,6 +13,7 @@ from . import utilities
 
 
 @app.route('/counter', methods=['GET'])
+@login_required
 def counter_handler():
     """
     Handle the GET on the counter page
@@ -80,6 +82,7 @@ def counter_handler():
 
 
 @app.route('/emoji', methods=['POST'])
+@login_required
 def emoji_post():
     """
     Note the observation of a new emoji out on the street
@@ -107,6 +110,7 @@ def emoji_post():
 
 
 @app.route('/emoji_validity', methods=['POST'])
+@login_required
 def emoji_validity():
     """
     Handle the request to change the validity of an emoji observation

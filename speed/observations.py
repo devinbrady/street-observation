@@ -8,6 +8,7 @@ from sqlalchemy import text
 
 from flask import current_app as app
 from flask import request, render_template
+from flask_login import login_required
 
 
 from . import db
@@ -16,6 +17,7 @@ from . import utilities
 
 
 @app.route('/observation/<observation_id>', methods=['GET', 'POST'])
+@login_required
 def one_observation(observation_id):
     """
     Display information about one observation

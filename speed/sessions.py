@@ -8,6 +8,7 @@ from sqlalchemy import text
 from flask_socketio import emit, join_room
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response, abort
+from flask_login import login_required
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -22,6 +23,7 @@ from .observations import toggle_valid
 
 
 @app.route('/session_settings', methods=['GET', 'POST'])
+@login_required
 def edit_session_settings():
     """
     Receive information about each session
@@ -134,6 +136,7 @@ def edit_session_settings():
 
 
 @socketio.on('connect')
+@login_required
 def new_socket_connection():
     """
     When a new user connects via websocket, assign them to a room based on the session_id
@@ -143,6 +146,7 @@ def new_socket_connection():
 
 
 @socketio.on('broadcast start')
+@login_required
 def broadcast_start(message):
     """
     A new observation has been initiated
@@ -171,6 +175,7 @@ def broadcast_start(message):
 
 
 @socketio.on('broadcast end')
+@login_required
 def broadcast_end(message):
     """
     The timer has ended for an observation
@@ -205,6 +210,7 @@ def broadcast_end(message):
 
 
 @app.route('/session', methods=['GET'])
+@login_required
 def session_handler():
 
     session_id = request.args.get('session_id')
@@ -284,6 +290,7 @@ def session_handler():
 
 
 @app.route('/session/<session_id>/<observation_id>', methods=['POST'])
+@login_required
 def toggle_valid_on_list(session_id, observation_id):
     """
     When on a session page with a list of observations, toggle the validity of one observation
@@ -297,6 +304,7 @@ def toggle_valid_on_list(session_id, observation_id):
 
 
 @app.route('/session/<session_id>/plot.png')
+@login_required
 def plot_png(session_id):
     """
     For one session_id, create a histogram and output it in bytes for display as an image

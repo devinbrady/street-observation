@@ -1,4 +1,7 @@
 
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import UUID
@@ -181,7 +184,7 @@ class Observation(db.Model):
 
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     """
     Store information about the people using our site
     """
@@ -190,25 +193,44 @@ class User(db.Model):
     user_id = db.Column(UUID(as_uuid=True), primary_key=True)
     full_name = db.Column(db.String(80))
     email = db.Column(db.String(120))
+    password_hash = db.Column(db.String(128))
     local_timezone = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False)
     deleted_at = db.Column(db.DateTime(timezone=True))
 
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def get_id(self):
+        return self.user_id
+
+    def __init__(self, email, local_timezone):
+
+        self.user_id = generate_uuid()
+        self.email = email
+        self.local_timezone = local_timezone
+
+        utc_now = utilities.now_utc()
+        self.created_at = utc_now
+        self.updated_at = utc_now
 
 
-class UserSession(db.Model):
-    """
-    Store information connecting a user to an observation session
-    """
+# class UserSession(db.Model):
+#     """
+#     Store information connecting a user to an observation session
+#     """
 
-    __tablename__ = 'user_sessions'
-    session_user_id = db.Column(UUID(as_uuid=True), primary_key=True)
-    session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.user_id'), nullable=False)
-    user_latitude = db.Column(db.Float)
-    user_longitude = db.Column(db.Float)
-    local_timezone = db.Column(db.String, nullable=False)
+#     __tablename__ = 'user_sessions'
+#     session_user_id = db.Column(UUID(as_uuid=True), primary_key=True)
+#     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
+#     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.user_id'), nullable=False)
+#     user_latitude = db.Column(db.Float)
+#     user_longitude = db.Column(db.Float)
+#     local_timezone = db.Column(db.String, nullable=False)
 
 
 

@@ -9,6 +9,24 @@
     {% endblock %}
 </head>
 <body>
-    <div id="content" style="max-width: 500px; padding:10px;">{% block content %}{% endblock %}</div>
+    <div id="content" style="max-width: 500px; padding:10px;">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <div id="filter" style="max-width: 500px; padding:10px;">
+        {% block footer %}
+
+        {% if current_user.is_authenticated %}
+            <div><a href="/logout">Logout user: {{ current_user.email }} </a></div>
+        {% else %}
+            <div><a href="/login">Login</a></div>
+        {% endif %}
+
+        <div><a href='/location_list'>List of Locations</a></div>
+        <div><a href='/about'>About this site</a></div>
+        <div><a href="/">Home</a></div>
+        {% endblock %}
+    </div>
 </body>
+
 </html>

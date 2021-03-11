@@ -4,6 +4,7 @@ import pandas as pd
 from sqlalchemy import text
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response, abort
+from flask_login import login_required
 
 from . import db
 from . import models
@@ -13,6 +14,7 @@ from .forms import LocationSettingsForm
 
 
 @app.route('/location_settings', methods=['GET', 'POST'])
+@login_required
 def edit_location_settings():
     """
     Receive information about each location
@@ -93,6 +95,7 @@ def edit_location_settings():
 
 
 @app.route('/location_list', methods=['GET'])
+@login_required
 def list_locations():
     """
     Display a list of all locations
@@ -119,6 +122,7 @@ def list_locations():
 
 
 @app.route('/location', methods=['GET'])
+@login_required
 def location_handler():
 
     location_id = request.args.get('location_id')
