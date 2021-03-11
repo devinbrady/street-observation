@@ -133,26 +133,6 @@ def edit_session_settings():
 
 
 
-@app.route('/session_list', methods=['GET'])
-def list_sessions():
-    """
-    List all sessions
-    """
-
-    with open(os.path.join(app.root_path, 'queries/sessions_list.sql'), 'r') as f:
-        sessions = pd.read_sql(text(f.read()), db.session.bind)
-
-    if len(sessions) > 0:
-        sessions = utilities.format_in_local_time(
-            sessions, 'first_start', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M:%S %p %Z')
-
-    return render_template(
-        'session_list.html'
-        , sessions=sessions
-        )
-
-
-
 @socketio.on('connect')
 def new_socket_connection():
     """
@@ -281,6 +261,7 @@ def session_handler():
         most_recent_speed = valid_observations['speed_value'][0]
         
         speed_limit_value = observations.speed_limit_value.median()
+
 
     return render_template(
         'session.html'
