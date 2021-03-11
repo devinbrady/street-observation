@@ -28,17 +28,20 @@ def edit_session_settings():
     """
 
     session_id = request.args.get('session_id')
+    location_id = request.args.get('location_id')
 
     if not session_id:
         session_id = 'new_session'
 
-    # todo: better connect session to location
-    location_id = request.args.get('location_id')
-    # this_location = utilities.one_location(location_id)
-
 
     if session_id == 'new_session':
-        # New session
+
+        if not location_id:
+            print('The location_id must be specified to start a new session')
+            abort(404)
+
+        this_location = utilities.one_location(location_id)
+        location_name = this_location['location_name']
 
         form = SessionSettingsForm(
             speed_limit_value=20
@@ -76,21 +79,23 @@ def edit_session_settings():
             if form.session_mode.data == 'speed timer':
                 return redirect(f'session?session_id={session_id}')
             elif form.session_mode.data == 'counter':
-                return redirect(f'counter?session_id={session_id}&location_id={location_id}')
+                return redirect(f'counter?session_id={session_id}')
 
     else:
         # Existing session
 
-        settings = utilities.one_session(session_id)
+        this_session = utilities.one_session(session_id)
+        location_id = this_session['location_id']
+        location_name = this_session['location_name']
 
         form = SessionSettingsForm(
-            speed_limit_value=settings['speed_limit_value']
-            , speed_units=settings['speed_units']
-            , distance_value=settings['distance_value']
-            , distance_units=settings['distance_units']
-            , session_mode=settings['session_mode']
-            , session_description=settings['session_description']
-            , publish=settings['publish']
+            speed_limit_value=this_session['speed_limit_value']
+            , speed_units=this_session['speed_units']
+            , distance_value=this_session['distance_value']
+            , distance_units=this_session['distance_units']
+            , session_mode=this_session['session_mode']
+            , session_description=this_session['session_description']
+            , publish=this_session['publish']
             )
 
         if form.validate_on_submit():
@@ -122,7 +127,7 @@ def edit_session_settings():
         'session_settings.html'
         , form=form
         , location_id=location_id
-        # , location_name=this_location['location_name']
+        , location_name=location_name
         , session_id=session_id
         )
 
@@ -230,8 +235,7 @@ def session_handler():
 
     session['session_id'] = session_id
 
-    this_settings = utilities.one_session(session_id)
-    # this_location = utilities.one_location(location_id)
+    this_session = utilities.one_session(session_id)
 
     with open(os.path.join(app.root_path, 'queries/observations_list.sql'), 'r') as f:
         observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
@@ -281,15 +285,16 @@ def session_handler():
     return render_template(
         'session.html'
         , session_id=session_id
-        , location_name=this_settings['location_name']
+        , location_id=this_session['location_id']
+        , location_name=this_session['location_name']
         , vehicle_count=vehicle_count
         , max_speed=max_speed
         , median_speed=median_speed
         , most_recent_speed=most_recent_speed
-        , speed_limit_value=this_settings['speed_limit_value']
-        , speed_units=this_settings['speed_units']
-        , distance_value=this_settings['distance_value']
-        , distance_units=this_settings['distance_units']
+        , speed_limit_value=this_session['speed_limit_value']
+        , speed_units=this_session['speed_units']
+        , distance_value=this_session['distance_value']
+        , distance_units=this_session['distance_units']
         , qr=plot_qr_code()
         , this_url=request.url
         , df=completed_observations

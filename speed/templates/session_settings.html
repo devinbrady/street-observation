@@ -6,7 +6,7 @@
   <div class="form-wrapper">
     <h2 class="title">Observation Session Settings</h2>
 
-    <div>Location: <a href="/location?location_id={{ location_id }}">{{ location_name }}</a></div>
+    <p>Location: <a href="/location?location_id={{ location_id }}">{{ location_name }}</a></p>
 
 
     <form method="POST" action="/session_settings?session_id={{ session_id if session_id else 'new_session' }}&location_id={{ location_id }}">
