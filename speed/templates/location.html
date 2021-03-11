@@ -60,7 +60,7 @@
   <tbody>
   {% for _, row in counter_sessions_at_location.iterrows() %}
     <tr scope="row">
-    <td><a href="/session?session_id={{ row.session_id }}">{{ row.start_timestamp_local }}</a></td>
+    <td><a href="/counter?session_id={{ row.session_id }}">{{ row.start_timestamp_local }}</a></td>
     <td>{{ '%0.0f'|format(row.session_duration_minutes|float) }} minutes</td>
     <td>tk</td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>

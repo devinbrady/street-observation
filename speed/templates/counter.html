@@ -12,7 +12,7 @@
         <div class="col p-3">
             <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-outline-primary" style="font-size:60px">
+                    <button type="submit" class="btn btn-outline-primary" style="font-size:50px">
                         &#{{ row.emoji_id }} {{ row.num_observations }}
                     </button>
                 </div>
@@ -56,6 +56,31 @@
 {% endfor %}
 
 </tbody>
+</table>
+
+
+<h2>Stats</h2>
+<table class="table">
+  <thead>
+  <tr>
+    <th scope="col">Emoji</th>
+    <th scope="col">Count per Hour</th>
+    <th scope="col">Description</th>
+  </tr>
+  </thead>
+  <tbody>
+
+    {% for _, row in emoji_count.iterrows() %}
+
+    <tr scope="row">
+      <td style="font-size:30px">&#{{ row.emoji_id }}</td>
+      <td> {{ '%0.1f'|format(row.observations_per_hour|float) }} </td>
+      <td> {{ row.emoji_description }} </td>
+
+    </tr>
+
+    {% endfor %}
+  </tbody>
 </table>
 
 <p><a href="/location_list">Location List</a></p>
