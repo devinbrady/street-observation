@@ -1,7 +1,6 @@
 import os
 
 from flask import Flask
-# from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 
@@ -20,8 +19,6 @@ def create_app(test_config=None):
     db.init_app(app)
 
     socketio.init_app(app)
-
-    # bootstrap = Bootstrap(app)
 
 
     from . import models
