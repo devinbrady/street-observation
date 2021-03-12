@@ -17,7 +17,7 @@
         {% block footer %}
 
         {% if current_user.is_authenticated %}
-            <div><a href="/logout">Logout user: {{ current_user.email }} </a></div>
+            <div><a href="/logout">Logout user: {{ current_user.username }} </a></div>
         {% else %}
             <div><a href="/login">Login</a></div>
         {% endif %}

@@ -8,14 +8,14 @@ from . import models
 
 class LoginForm(FlaskForm):
 
-    email = StringField('Email', render_kw={'class': 'form-control'})
+    username = StringField('Username', render_kw={'class': 'form-control'})
     password = PasswordField('Password', render_kw={'class': 'form-control'})
-    submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary'})
+    submit = SubmitField('Log In', render_kw={'class': 'btn btn-primary'})
 
 
 
 class RegistrationForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired()], render_kw={'class': 'form-control'})
+    username = StringField('Username', validators=[DataRequired()], render_kw={'class': 'form-control'})
     password = PasswordField('Password', validators=[DataRequired()], render_kw={'class': 'form-control'})
     local_timezone = SelectField(
         'Local Timezone'
@@ -24,15 +24,10 @@ class RegistrationForm(FlaskForm):
     )
     submit = SubmitField('Register', render_kw={'class': 'btn btn-primary'})
 
-    # def validate_username(self, username):
-    #     user = models.User.query.filter_by(username=username.data).first()
-    #     if user is not None:
-    #         raise ValidationError('Please use a different username.')
-
-    def validate_email(self, email):
-        user = models.User.query.filter_by(email=email.data).first()
+    def validate_username(self, username):
+        user = models.User.query.filter_by(username=username.data).first()
         if user is not None:
-            raise ValidationError('Please use a different email address.')
+            raise ValidationError('Please use a different username.')
 
 
 class SessionSettingsForm(FlaskForm):

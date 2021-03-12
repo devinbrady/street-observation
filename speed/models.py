@@ -192,7 +192,7 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     user_id = db.Column(UUID(as_uuid=True), primary_key=True)
     full_name = db.Column(db.String(80))
-    email = db.Column(db.String(120))
+    username = db.Column(db.String(120))
     password_hash = db.Column(db.String(128))
     local_timezone = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False)
@@ -208,10 +208,10 @@ class User(UserMixin, db.Model):
     def get_id(self):
         return self.user_id
 
-    def __init__(self, email, local_timezone):
+    def __init__(self, username, local_timezone):
 
         self.user_id = generate_uuid()
-        self.email = email
+        self.username = username
         self.local_timezone = local_timezone
 
         utc_now = utilities.now_utc()

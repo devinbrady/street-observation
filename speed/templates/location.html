@@ -38,8 +38,8 @@
   {% for _, row in sessions_at_location.iterrows() %}
     <tr scope="row">
     <td><a href="/session?session_id={{ row.session_id }}">{{ row.start_timestamp_local }}</a></td>
-    <td>{{ '%0.0f'|format(row.session_duration_minutes|float) }} minutes</td>
-    <td>{{ '{:0.3f}'.format(row.distance_value) }} {{ row.distance_units }}</td>
+    <td>{{ '%0.0f'|format(row.session_duration_minutes|float) }} minute{{ 's' if row.session_duration_minutes|round > 1 }}</td>
+    <td>{{ '{:0.0f}'.format(row.distance_value) }} {{ row.distance_units }}</td>
     <td>{{ '{:0.1f}'.format(row.median_speed) }} {{ row.speed_units }}</td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
     <td>{{ row.session_description }}</td>
@@ -55,8 +55,8 @@
   <tr>
     <th scope="col">Session Date and Time</th>
     <th scope="col">Duration</th>
-    <th scope="col">Most Common Emoji</th>
     <th scope="col">Number of Observations</th>
+    <th scope="col">Most Common Emoji</th>
     <th scope="col">Description</th>
   </tr>
   </thead>
@@ -64,9 +64,9 @@
   {% for _, row in counter_sessions_at_location.iterrows() %}
     <tr scope="row">
     <td><a href="/counter?session_id={{ row.session_id }}">{{ row.start_timestamp_local }}</a></td>
-    <td>{{ '%0.0f'|format(row.session_duration_minutes|float) }} minutes</td>
-    <td>{{ row.most_common_emoji }}</td>
+    <td>{{ '%0.0f'|format(row.session_duration_minutes|float) }} minute{{ 's' if row.session_duration_minutes|round > 1 }}</td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
+    <td>{{ row.most_common_emoji }}</td>
     <td>{{ row.session_description }}</td>
     </tr>
   {% endfor %}

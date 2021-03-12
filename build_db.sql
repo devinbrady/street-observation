@@ -90,7 +90,7 @@ insert into emoji (emoji_id, emoji_name, glyph, display_order, emoji_description
     , (9855, 'wheelchair-symbol', '♿️', 1, 'A wheelchair, whether motorized or not')
     , (128021, 'dog', '🐕', 2, 'A dog')
     , (128690, 'bicycle', '🚲', 3, 'A bicycle or e-bike')
-    , (128756, 'kick-scooter', '🛴', 4, 'A kick scooter, whether electric or not')
+    , (128756, 'kick-scooter', '🛴', 4, 'A kick scooter or skateboard, whether electric or not')
     , (127949, 'motorcycle', '🏍', 5, 'A motorcycle or moped')
     , (128652, 'bus', '🚌', 6, 'A bus')
     , (128663, 'automobile', '🚗', 7, 'A car, van, SUV, or pickup truck')
@@ -103,7 +103,7 @@ drop table if exists users cascade;
 CREATE TABLE users (
     user_id uuid PRIMARY KEY,
     full_name character varying(80),
-    email character varying(120),
+    username character varying(120),
     password_hash character varying(128),
     local_timezone character varying NOT NULL,
     created_at timestamp with time zone NOT NULL,

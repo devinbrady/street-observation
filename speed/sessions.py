@@ -264,7 +264,7 @@ def session_handler():
         vehicle_count = len(valid_observations)
         max_speed = valid_observations.speed_value.max()
         median_speed = valid_observations.speed_value.median()
-        most_recent_speed = valid_observations['speed_value'][0]
+        most_recent_speed = valid_observations['speed_value'].tolist()[0]
         
         speed_limit_value = observations.speed_limit_value.median()
 
@@ -336,7 +336,7 @@ def create_histogram(session_id):
         )
 
     fig = Figure()
-    fig.set_size_inches(4, 3)
+    fig.set_size_inches(4, 4)
     axis = fig.add_subplot(1, 1, 1)
     axis.hist(session_observations['speed_value'])
 

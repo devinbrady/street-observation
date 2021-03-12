@@ -42,10 +42,10 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = models.User.query.filter_by(email=form.email.data).first()
+        user = models.User.query.filter_by(username=form.username.data).first()
 
         if user is None or not user.check_password(form.password.data):
-            print('Invalid email or password')
+            print('Invalid username or password')
             return redirect(url_for('login'))
         login_user(user)
         
@@ -55,18 +55,18 @@ def login():
 
 
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect('/')  # redirect(url_for('index'))
-    form = RegistrationForm(local_timezone='America/New_York')
-    if form.validate_on_submit():
-        user = models.User(email=form.email.data, local_timezone=form.local_timezone.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('register.html', form=form)
+# @app.route('/register', methods=['GET', 'POST'])
+# def register():
+#     if current_user.is_authenticated:
+#         return redirect('/')  # redirect(url_for('index'))
+#     form = RegistrationForm(local_timezone='America/New_York')
+#     if form.validate_on_submit():
+#         user = models.User(username=form.username.data, local_timezone=form.local_timezone.data)
+#         user.set_password(form.password.data)
+#         db.session.add(user)
+#         db.session.commit()
+#         return redirect(url_for('login'))
+#     return render_template('register.html', form=form)
 
 
 
