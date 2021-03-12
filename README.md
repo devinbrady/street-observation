@@ -5,13 +5,14 @@ A mobile website for collecting and publishing observations about a street.
 ## Screenshots
 
 ### Speed Timer Mode
-![speed timer button](speed/static/images/speed_timer_button.png)
-
-![speed timer histogram](speed/static/images/speed_timer_histogram.png)
-
-
+<p align="center">
+    <img src="speed/static/images/speed_timer_button.png" width="300" alt="speed timer button">
+    <img src="speed/static/images/speed_timer_histogram.png" width="300" alt="speed timer histogram">
+</p>
 
 ### Counter Mode
-![counter buttons](speed/static/images/counter_buttons.png)
 
-![counter stats](speed/static/images/counter_stats.png)
+<p align="center">
+    <img src="speed/static/images/counter_buttons.png" width="300" alt="counter buttons">
+    <img src="speed/static/images/counter_stats.png" width="300" alt="counter stats">
+</p>
