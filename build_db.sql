@@ -72,6 +72,8 @@ CREATE TABLE counter_observations (
 );
 
 
+drop table if exists emoji;
+
 CREATE TABLE emoji (
     emoji_id SERIAL PRIMARY KEY,
     emoji_name character varying NOT NULL,
@@ -96,3 +98,15 @@ insert into emoji (emoji_id, emoji_name, glyph, display_order, emoji_description
     ;
 
 
+drop table if exists users cascade;
+
+CREATE TABLE users (
+    user_id uuid PRIMARY KEY,
+    full_name character varying(80),
+    email character varying(120),
+    password_hash character varying(128),
+    local_timezone character varying NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone
+);

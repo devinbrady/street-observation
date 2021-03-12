@@ -1,6 +1,6 @@
 
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, PasswordField, TextField, IntegerField, DecimalField, BooleanField, SubmitField
+from wtforms import SelectField, StringField, PasswordField, TextField, IntegerField, DecimalField, BooleanField, RadioField, SubmitField
 from wtforms.validators import DataRequired, Length, Email
 
 from . import models
@@ -40,7 +40,7 @@ class SessionSettingsForm(FlaskForm):
     Form to collect information about a session
     """
 
-    session_mode = SelectField(
+    session_mode = RadioField(
         'Session Mode'
         , [DataRequired()]
         , choices=[
@@ -48,7 +48,7 @@ class SessionSettingsForm(FlaskForm):
             # , 'speed radar'
             , 'counter'
             ]
-        , render_kw={'class': 'form-control'}
+        , render_kw={'class': 'form-check'}
     )
 
     speed_limit_value = IntegerField(
