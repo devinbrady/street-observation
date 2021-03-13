@@ -7,8 +7,10 @@ from sqlalchemy import text
 from decimal import Decimal
 from datetime import datetime, timezone
 from flask import current_app as app
+from flask_login import current_user
 
 from . import db
+from . import models
 
 
 def format_in_local_time(df, timestamp_column, tz_column, output_column, output_format):
@@ -112,3 +114,37 @@ def one_session(session_id):
 
     return this_session
 
+
+
+def user_session_exists(user_id, session_id):
+    """
+    Return dataframe containing information about one user_session
+    """
+
+    with open(os.path.join(app.root_path, 'queries/user_sessions_one.sql'), 'r') as f:
+        user_session_df = pd.read_sql(text(f.read()), db.session.bind, params={'user_id': user_id, 'session_id': session_id})
+    
+    if len(user_session_df) > 1:
+        print('Duplicate entries in user_sessions')
+        abort(500)
+
+    return len(user_session_df) == 1
+
+
+
+def activate_user_session(session_id, local_timezone):
+    """
+    Insert a new row in the user_sessions table connecting this user to this session, if it hasn't already been done
+    """
+
+    if not user_session_exists(current_user.user_id, session_id):
+
+        new_user_session_object = models.UserSession(
+            user_id=current_user.user_id
+            , session_id=session_id
+            , local_timezone=local_timezone
+            )
+        db.session.add(new_user_session_object)
+        db.session.commit()
+
+    return

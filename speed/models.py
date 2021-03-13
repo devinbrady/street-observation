@@ -228,6 +228,8 @@ class UserSession(db.Model):
     """
 
     __tablename__ = 'user_sessions'
+
+    # todo: maybe this ID should be a concat of user and session
     user_session_id = db.Column(UUID(as_uuid=True), primary_key=True)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.user_id'), nullable=False)
     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)

@@ -76,17 +76,7 @@ def edit_session_settings():
                 , publish=form.publish.data
                 )
             db.session.add(new_session_object)
-            
-            new_user_session_object = models.UserSession(
-                user_id=current_user.user_id
-                , session_id=session_id
-                , local_timezone=local_timezone
-                )
-            db.session.add(new_user_session_object)
-
             db.session.commit()
-
-
 
             if form.session_mode.data == 'speed timer':
                 return redirect(f'session?session_id={session_id}')
@@ -145,7 +135,6 @@ def edit_session_settings():
 
 
 
-
 @app.route('/user_sessions', methods=['GET'])
 @login_required
 def get_user_sessions():
@@ -158,7 +147,7 @@ def get_user_sessions():
 
     if len(user_session_df) > 0:
         user_session_df = utilities.format_in_local_time(
-            user_session_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%Y-%m-%d %l:%M:%S %p %Z')
+            user_session_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%Y-%m-%d %l:%M %p %Z')
 
     return render_template(
         'user_sessions.html'
@@ -251,9 +240,12 @@ def session_handler():
     if not session_id:
         abort(404)
 
-    session['session_id'] = session_id
-
     this_session = utilities.one_session(session_id)
+
+    # if we're still allowing this session to have new observations added to it... 
+    session['session_id'] = session_id
+    utilities.activate_user_session(session_id, this_session['local_timezone'])
+
 
     with open(os.path.join(app.root_path, 'queries/observations_list.sql'), 'r') as f:
         observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})

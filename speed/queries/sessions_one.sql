@@ -10,6 +10,7 @@ s.location_id
 , s.speed_units
 , s.session_description
 , s.publish
+, s.local_timezone
 , loc.location_name
 
 from sessions s

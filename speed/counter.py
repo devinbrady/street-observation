@@ -105,6 +105,8 @@ def emoji_post():
     db.session.add(new_counter_observation)
     db.session.commit()
 
+    utilities.activate_user_session(session_id, local_timezone)
+
     return redirect(f'/counter?location_id={location_id}&session_id={session_id}')
 
 
