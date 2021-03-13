@@ -8,7 +8,7 @@ from sqlalchemy import text
 from flask_socketio import emit, join_room
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response, abort
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -76,7 +76,17 @@ def edit_session_settings():
                 , publish=form.publish.data
                 )
             db.session.add(new_session_object)
+            
+            new_user_session_object = models.UserSession(
+                user_id=current_user.user_id
+                , session_id=session_id
+                , local_timezone=local_timezone
+                )
+            db.session.add(new_user_session_object)
+
             db.session.commit()
+
+
 
             if form.session_mode.data == 'speed timer':
                 return redirect(f'session?session_id={session_id}')
@@ -131,6 +141,28 @@ def edit_session_settings():
         , location_id=location_id
         , location_name=location_name
         , session_id=session_id
+        )
+
+
+
+
+@app.route('/user_sessions', methods=['GET'])
+@login_required
+def get_user_sessions():
+    """
+    List all sessions the current user is connected to
+    """
+
+    with open(os.path.join(app.root_path, 'queries/user_sessions.sql'), 'r') as f:
+        user_session_df = pd.read_sql(text(f.read()), db.session.bind, params={'user_id': current_user.user_id})
+
+    if len(user_session_df) > 0:
+        user_session_df = utilities.format_in_local_time(
+            user_session_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%Y-%m-%d %l:%M:%S %p %Z')
+
+    return render_template(
+        'user_sessions.html'
+        , user_session_df=user_session_df
         )
 
 

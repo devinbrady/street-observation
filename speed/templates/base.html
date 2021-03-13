@@ -18,6 +18,7 @@
 
         {% if current_user.is_authenticated %}
             <div><a href="/logout">Logout user: {{ current_user.username }} </a></div>
+            <div><a href="/user_sessions">Your Observation Sessions</a></div>
         {% else %}
             <div><a href="/login">Login</a></div>
         {% endif %}

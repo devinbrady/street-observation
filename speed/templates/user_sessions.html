@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Session List{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+  <h2>User Session List</h2>
+
+  <table class="table">
+  <thead>
+  <tr>
+    <th scope="col">Date and Time</th>
+    <th scope="col">Location Name</th>
+    <th scope="col">Session Mode</th>
+    <th scope="col">Number of Valid Observations</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for _, row in user_session_df.iterrows() %}
+    <tr scope="row">
+    <td><a href="/session?session_id={{ row.session_id }}">{{ row.most_recent_observation_local }}</a></td>
+    <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_name }}</a></td>
+    <td>{{ row.session_mode }} </td>
+    <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+
+{% endblock %}

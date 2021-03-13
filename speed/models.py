@@ -194,6 +194,8 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(80))
     username = db.Column(db.String(120))
     password_hash = db.Column(db.String(128))
+    # email = db.Column(db.String(120))
+    # phone_number = db.Column(db.String(120))
     local_timezone = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False)
@@ -219,18 +221,33 @@ class User(UserMixin, db.Model):
         self.updated_at = utc_now
 
 
-# class UserSession(db.Model):
-#     """
-#     Store information connecting a user to an observation session
-#     """
 
-#     __tablename__ = 'user_sessions'
-#     session_user_id = db.Column(UUID(as_uuid=True), primary_key=True)
-#     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
-#     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.user_id'), nullable=False)
-#     user_latitude = db.Column(db.Float)
-#     user_longitude = db.Column(db.Float)
-#     local_timezone = db.Column(db.String, nullable=False)
+class UserSession(db.Model):
+    """
+    Store information connecting a user to an observation session
+    """
+
+    __tablename__ = 'user_sessions'
+    user_session_id = db.Column(UUID(as_uuid=True), primary_key=True)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.user_id'), nullable=False)
+    session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
+    user_latitude = db.Column(db.Float)
+    user_longitude = db.Column(db.Float)
+    local_timezone = db.Column(db.String, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    deleted_at = db.Column(db.DateTime(timezone=True))
+
+    def __init__(self, user_id, session_id, local_timezone):
+
+        self.user_session_id = generate_uuid()
+        self.user_id = user_id
+        self.session_id = session_id
+        self.local_timezone = local_timezone
+
+        utc_now = utilities.now_utc()
+        self.created_at = utc_now
+        self.updated_at = utc_now
 
 
 

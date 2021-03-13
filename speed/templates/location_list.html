@@ -13,7 +13,8 @@
     <th scope="col">City</th>
     <th scope="col">Most Recent Observation</th>
     <th scope="col">Number of Sessions</th>
-    <th scope="col">Number of Observations</th>
+    <th scope="col">Number of Speed Observations</th>
+    <th scope="col">Number of Counter Observations</th>
   </tr>
   </thead>
   <tbody>
@@ -23,7 +24,8 @@
     <td>{{ row.city_state }}</td>
     <td>{{ row.most_recent_observation_local }}</td>
     <td>{{ '%0.0f'|format(row.num_sessions|float) }}</td>
-    <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
+    <td>{{ '%0.0f'|format(row.num_speed_observations|float) }}</td>
+    <td>{{ '%0.0f'|format(row.num_counter_observations|float) }}</td>
     </tr>
   {% endfor %}
 </table>
