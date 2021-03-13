@@ -70,6 +70,15 @@ def login():
 
 
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    """
+    Show a friendly page when a logged-out user attempted to access a login_required page
+    """
+    return render_template('unauthorized.html')
+
+
+
 @app.route('/logout')
 @login_required
 def logout():
