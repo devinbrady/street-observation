@@ -251,6 +251,7 @@ def session_handler():
         observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
     completed_observations = observations[observations.end_time.notnull()].copy()
+    completed_valid_observations = completed_observations[completed_observations.observation_valid].copy()
 
     
 
@@ -262,7 +263,7 @@ def session_handler():
         most_recent_speed = 0
 
     elif len(observations) == 1 and len(completed_observations) == 0:
-        # first time through, timer_status = 'vehicle_in_timer'
+        # first time through, timer has started but has not yet ended
 
         vehicle_count = 0
         max_speed = 0
@@ -283,14 +284,23 @@ def session_handler():
         completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
         completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
 
-
         valid_observations = completed_observations[completed_observations.observation_valid].copy()
         vehicle_count = len(valid_observations)
-        max_speed = valid_observations.speed_value.max()
-        median_speed = valid_observations.speed_value.median()
-        most_recent_speed = valid_observations['speed_value'].tolist()[0]
+
+        if vehicle_count == 0:
+            # There has not yet been a VALID observation, so set everything to zero
+
+            max_speed = 0
+            median_speed = 0
+            most_recent_speed = 0
+
+        else:
+            # Valid, completed observations have occurred
+
+            max_speed = valid_observations.speed_value.max()
+            median_speed = valid_observations.speed_value.median()
+            most_recent_speed = valid_observations['speed_value'].iloc[0]
         
-        speed_limit_value = observations.speed_limit_value.median()
 
 
     return render_template(
