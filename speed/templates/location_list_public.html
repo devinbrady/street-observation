@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Location List{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+  <h2>Location List</h2>
+
+  <table class="table">
+  <thead>
+  <tr>
+    <th scope="col">Location Name</th>
+    <th scope="col">City</th>
+    <th scope="col">Most Recent Observation</th>
+    <th scope="col">Number of Sessions</th>
+    <th scope="col">Number of Speed Observations</th>
+    <th scope="col">Number of Counter Observations</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for _, row in locations.iterrows() %}
+    <tr scope="row">
+    <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_name }}</a></td>
+    <td>{{ row.city_state }}</td>
+    <td>{{ row.most_recent_observation_local }}</td>
+    <td>{{ '%0.0f'|format(row.num_sessions|float) }}</td>
+    <td>{{ '%0.0f'|format(row.num_speed_observations|float) }}</td>
+    <td>{{ '%0.0f'|format(row.num_counter_observations|float) }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+  <p><a href='/location_settings'>Create a new location</a></p>
+  
+
+{% endblock %}

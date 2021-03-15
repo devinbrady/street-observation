@@ -121,6 +121,32 @@ def list_locations():
 
 
 
+@app.route('/location_list_public', methods=['GET'])
+def location_list_public():
+    """
+    Display a list of locations with sessions that users have chosen to publish
+    """
+
+    with open(os.path.join(app.root_path, 'queries/location_list_public.sql'), 'r') as f:
+        locations = pd.read_sql(f.read(), db.session.bind)
+
+    locations = utilities.format_in_local_time(
+        locations
+        , 'most_recent_observation'
+        , 'local_timezone'
+        , 'most_recent_observation_local'
+        , '%Y-%m-%d %l:%M %p %Z'
+        )
+
+    locations['city_state'] = locations['city'] + ', ' + locations['state_code']
+
+    return render_template(
+        'location_list_public.html'
+        , locations=locations
+        )
+
+
+
 @app.route('/location', methods=['GET'])
 @login_required
 def location_handler():
@@ -129,7 +155,8 @@ def location_handler():
 
     # A location_id needs to be provided to view this page
     if not location_id:
-        abort(404)
+        print('location_id not provided')
+        abort(500)
 
     this_location = utilities.one_location(location_id)
 

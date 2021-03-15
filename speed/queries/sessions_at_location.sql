@@ -1,18 +1,18 @@
 
+
 select
 loc.location_id
 , loc.location_name
-, loc.city
-, loc.state_code
 , loc.local_timezone
-, min(coalesce(so.start_time, co.created_at, loc.created_at)) as first_start
+, s.session_id
+, s.session_mode
+, s.session_description
+, least(min(so.start_time), min(co.created_at)) as earliest_observation
 , greatest(max(so.start_time), max(co.created_at)) as most_recent_observation
-, count(distinct s.session_id) as num_sessions
-, count(distinct so.observation_id) as num_speed_observations
-, count(distinct co.counter_id) as num_counter_observations
+, count(distinct coalesce(so.observation_id, co.counter_id)) as num_observations
 
-from locations loc
-left join sessions s using (location_id)
+from sessions s
+inner join locations loc using (location_id)
 left join observations so on (
     so.session_id = s.session_id
     and so.observation_valid
@@ -23,5 +23,10 @@ left join counter_observations co on (
     and co.observation_valid
     )
 
-group by 1,2,3,4,5
-order by first_start desc
+
+where loc.location_id = :location_id
+
+group by 1,2,3,4,5,6
+
+order by most_recent_observation desc
+
