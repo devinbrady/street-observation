@@ -6,10 +6,13 @@
 {% block content %}
 <h1>Counter</h1>
 
+
 <div class="container px-4">
     <div class="row row-cols-2">
     {% for _, row in emoji_count.iterrows() %}
         <div class="col p-3">
+
+          {% if session_open %}
             <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
                 <div class="d-grid">
                     <button type="submit" class="btn btn-outline-primary" style="font-size:50px">
@@ -17,6 +20,16 @@
                     </button>
                 </div>
             </form>
+          {% else %}
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-secondary" style="font-size:50px">
+                        &#{{ row.emoji_id }} {{ row.num_observations }}
+                    </button>
+                </div>
+          {% endif %}
+
+
+
         </div>
     {% endfor %}
     </div>

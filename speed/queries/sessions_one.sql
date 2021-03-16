@@ -11,6 +11,7 @@ s.location_id
 , s.session_description
 , s.publish
 , s.local_timezone
+, s.created_at
 , loc.location_name
 
 from sessions s

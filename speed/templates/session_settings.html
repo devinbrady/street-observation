@@ -95,6 +95,9 @@
             {% endfor %}
           </ul>
         {% endif %}
+
+        <p class="help-block">{{ form.publish.description|safe }}</p>
+
       </div>
 
       {{ form.submit }}
