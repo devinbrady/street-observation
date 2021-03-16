@@ -5,6 +5,7 @@ import os
 import pandas as pd
 from sqlalchemy import text
 from decimal import Decimal
+from dateutil import tz
 from datetime import datetime, timezone
 from flask import current_app as app
 from flask_login import current_user
@@ -24,7 +25,8 @@ def format_in_local_time(df, timestamp_column, tz_column, output_column, output_
     # Convert timezone for non-null timestamps
     for idx, row in df[df[timestamp_column].notnull()].iterrows():
 
-        df.loc[idx, output_column] = row[timestamp_column].astimezone(row[tz_column]).strftime(output_format)
+        local_tz = tz.gettz(row[tz_column])
+        df.loc[idx, output_column] = row[timestamp_column].astimezone(local_tz).strftime(output_format)
 
     # df[output_column] = df.groupby(tz_column)[timestamp_column].transform(lambda x: x.dt.tz_convert(x.name))
 
