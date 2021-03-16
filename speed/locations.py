@@ -109,7 +109,7 @@ def list_locations():
         , 'most_recent_observation'
         , 'local_timezone'
         , 'most_recent_observation_local'
-        , '%Y-%m-%d %l:%M %p %Z'
+        , '%b %e, %Y %l:%M %p %Z'
         )
 
     locations['city_state'] = locations['city'] + ', ' + locations['state_code']
@@ -135,7 +135,7 @@ def location_list_public():
         , 'most_recent_observation'
         , 'local_timezone'
         , 'most_recent_observation_local'
-        , '%Y-%m-%d %l:%M %p %Z'
+        , '%b %e, %Y %l:%M %p %Z'
         )
 
     locations['city_state'] = locations['city'] + ', ' + locations['state_code']
@@ -190,7 +190,7 @@ def location_handler():
             )
 
         sessions_at_location['session_duration_minutes'] = (sessions_at_location['start_timestamp_max'] - sessions_at_location['start_timestamp_min']).dt.total_seconds() / 60
-        sessions_at_location = utilities.format_in_local_time(sessions_at_location, 'start_timestamp_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M %p %Z')
+        sessions_at_location = utilities.format_in_local_time(sessions_at_location, 'start_timestamp_min', 'local_timezone', 'start_timestamp_local', '%b %e, %Y %l:%M %p %Z')
         sessions_at_location = sessions_at_location.sort_values(by='start_timestamp_min', ascending=False)
         
 
@@ -226,7 +226,7 @@ def location_handler():
         counter_sessions_at_location = pd.merge(counter_sessions_at_location, common_emoji_df, how='inner', on='session_id')
 
         counter_sessions_at_location['session_duration_minutes'] = (counter_sessions_at_location['created_at_max'] - counter_sessions_at_location['created_at_min']).dt.total_seconds() / 60
-        counter_sessions_at_location = utilities.format_in_local_time(counter_sessions_at_location, 'created_at_min', 'local_timezone', 'start_timestamp_local', '%Y-%m-%d %l:%M %p %Z')
+        counter_sessions_at_location = utilities.format_in_local_time(counter_sessions_at_location, 'created_at_min', 'local_timezone', 'start_timestamp_local', '%b %e, %Y %l:%M %p %Z')
         counter_sessions_at_location = counter_sessions_at_location.sort_values(by='created_at_min', ascending=False)
 
 

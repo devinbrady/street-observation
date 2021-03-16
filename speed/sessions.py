@@ -147,7 +147,7 @@ def get_user_sessions():
 
     if len(user_session_df) > 0:
         user_session_df = utilities.format_in_local_time(
-            user_session_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%Y-%m-%d %l:%M %p %Z')
+            user_session_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%b %e, %Y %l:%M %p %Z')
 
     return render_template(
         'user_sessions.html'
@@ -281,7 +281,6 @@ def session_handler():
             , axis=1
             )
 
-        completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
         completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
 
         valid_observations = completed_observations[completed_observations.observation_valid].copy()

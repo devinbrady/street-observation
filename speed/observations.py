@@ -38,7 +38,7 @@ def one_observation(observation_id):
         , axis=1
         )
 
-    this_obs = utilities.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_date_local', '%b %w, %Y')
+    this_obs = utilities.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_date_local', '%b %e, %Y')
     this_obs = utilities.format_in_local_time(this_obs, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
 
     this_obs_series = this_obs.squeeze()
