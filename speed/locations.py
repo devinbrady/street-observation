@@ -1,7 +1,7 @@
 
 import os
 import pandas as pd
-from sqlalchemy import text, bindparam
+from sqlalchemy import text
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response, abort
 from flask_login import login_required, current_user
@@ -105,12 +105,22 @@ def list_locations():
     else:
         this_user_sessions = []
 
-    with open(os.path.join(app.root_path, 'queries/locations_list.sql'), 'r') as f:
-        locations = pd.read_sql(
-            text(f.read()).bindparams(bindparam('this_user_sessions', expanding=True))
-            , db.session.bind
-            , params={'this_user_sessions': this_user_sessions}
-            )
+    with open(os.path.join(app.root_path, 'queries/session_locations.sql'), 'r') as f:
+        session_locations = pd.read_sql(text(f.read()), db.session.bind)
+
+    session_locations_to_display = session_locations[(session_locations.publish) | (session_locations.session_id.isin(this_user_sessions))].copy()
+
+    locations = session_locations_to_display.groupby('location_id').agg(
+        num_sessions=('session_id', 'count')
+        , num_speed_observations=('num_speed_observations', 'sum')
+        , num_counter_observations=('num_counter_observations', 'sum')
+        , most_recent_observation=('most_recent_observation', 'max')
+        , local_timezone=('local_timezone', 'first')
+        , city=('city', 'first')
+        , state_code=('state_code', 'first')
+        , location_name=('location_name', 'first')
+        ).reset_index()
+
 
     locations = utilities.format_in_local_time(
         locations
