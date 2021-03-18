@@ -135,23 +135,31 @@ def edit_session_settings():
 
 
 
-@app.route('/user_sessions', methods=['GET'])
-@login_required
-def get_user_sessions():
+@app.route('/session_list', methods=['GET'])
+def get_session_list():
     """
     List all sessions the current user is connected to
     """
 
-    with open(os.path.join(app.root_path, 'queries/user_sessions.sql'), 'r') as f:
-        user_session_df = pd.read_sql(text(f.read()), db.session.bind, params={'user_id': current_user.user_id})
+    with open(os.path.join(app.root_path, 'queries/session_list.sql'), 'r') as f:
+        all_sessions_df = pd.read_sql(text(f.read()), db.session.bind)
 
-    if len(user_session_df) > 0:
-        user_session_df = utilities.format_in_local_time(
-            user_session_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%b %e, %Y %l:%M %p %Z')
+
+    if current_user.is_authenticated:
+        this_user_sessions = utilities.list_of_user_sessions(current_user.user_id)
+    else:
+        this_user_sessions = []
+
+    # Only display published sessions and private sessions connected to this user
+    session_list_df = all_sessions_df[(all_sessions_df.publish) | (all_sessions_df.session_id.isin(this_user_sessions))].copy()
+
+    if len(session_list_df) > 0:
+        session_list_df = utilities.format_in_local_time(
+            session_list_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%b %e, %Y %l:%M %p %Z')
 
     return render_template(
-        'user_sessions.html'
-        , user_session_df=user_session_df
+        'session_list.html'
+        , session_list_df=session_list_df
         )
 
 
@@ -231,7 +239,6 @@ def broadcast_end(message):
 
 
 @app.route('/session', methods=['GET'])
-@login_required
 def session_handler():
 
     session_id = request.args.get('session_id')
@@ -243,9 +250,36 @@ def session_handler():
     this_session = utilities.one_session(session_id)
     session_open = utilities.is_session_open(this_session['created_at'].to_pydatetime())
 
-    # if we're still allowing this session to have new observations added to it... 
-    session['session_id'] = session_id
-    utilities.activate_user_session(session_id, this_session['local_timezone'])
+    if session_open:
+
+        if current_user.is_authenticated:
+            # When the session is less than 24 hours old and the user is logged in, any user with the link can add observations
+            session['session_id'] = session_id
+            utilities.activate_user_session(session_id, this_session['local_timezone'])
+
+        else:
+            # When the session is less than 24 hours old and the user is NOT logged in, the user can't see this page
+            return app.login_manager.unauthorized()
+
+    else:
+        # The session is more than 24 hours old
+
+        if this_session['publish']:
+            # It's a published session, anyone can view it
+            pass
+
+        else:
+
+            if current_user.is_authenticated:
+                # When the session is more than 24 hours old, the session is not published, and the user is logged in, the user must have the ability to see the session
+                this_user_sessions = utilities.list_of_user_sessions(current_user.user_id)
+            else:
+                this_user_sessions = []
+
+            if session_id not in this_user_sessions:
+                return app.login_manager.unauthorized()
+
+
 
 
     with open(os.path.join(app.root_path, 'queries/observations_list.sql'), 'r') as f:
@@ -339,7 +373,6 @@ def toggle_valid_on_list(session_id, observation_id):
 
 
 @app.route('/session/<session_id>/plot.png')
-@login_required
 def plot_png(session_id):
     """
     For one session_id, create a histogram and output it in bytes for display as an image

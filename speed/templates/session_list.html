@@ -4,7 +4,7 @@
   {{ super() }}
 {% endblock %}
 {% block content %}
-  <h2>User Session List</h2>
+  <h2>Session List</h2>
 
   <table class="table">
   <thead>
@@ -13,10 +13,12 @@
     <th scope="col">Location Name</th>
     <th scope="col">Session Mode</th>
     <th scope="col">Number of Valid Observations</th>
+    <th scope="col">Published</th>
+    <th scope="col">Description</th>
   </tr>
   </thead>
   <tbody>
-  {% for _, row in user_session_df.iterrows() %}
+  {% for _, row in session_list_df.iterrows() %}
     <tr scope="row">
     {% if row.session_mode == 'speed timer' %}
       <td><a href="/session?session_id={{ row.session_id }}">{{ row.most_recent_observation_local }}</a></td>
@@ -26,6 +28,8 @@
     <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_name }}</a></td>
     <td>{{ row.session_mode }} </td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
+    <td>{{ row.publish }} </td>
+    <td>{{ row.session_description }} </td>
     </tr>
   {% endfor %}
 </table>

@@ -15,6 +15,18 @@ from . import models
 
 
 
+def list_of_user_sessions(user_id):
+    """
+    Return a list of session_ids that the user is able to see
+    """
+
+    with open(os.path.join(app.root_path, 'queries/user_sessions.sql'), 'r') as f:
+        user_sessions_df = pd.read_sql(text(f.read()), db.session.bind, params={'user_id': current_user.user_id})
+
+    return user_sessions_df['session_id'].tolist()
+
+
+
 def is_session_open(created_at):
     """
     If a session is more than 24 hours old, do not allow new observations to be added
@@ -23,9 +35,11 @@ def is_session_open(created_at):
     age_of_session = now_utc() - created_at
 
     if age_of_session.days == 0:
-        return True
+        session_time_valid = True
     else:
-        return False
+        session_time_valid = False
+
+    return session_time_valid
 
 
 def format_in_local_time(df, timestamp_column, tz_column, output_column, output_format):

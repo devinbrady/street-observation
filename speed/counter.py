@@ -4,7 +4,7 @@ import pandas as pd
 from sqlalchemy import text
 from flask import current_app as app
 from flask import render_template, request, redirect
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from . import db
 from . import models
@@ -22,6 +22,36 @@ def counter_handler():
     session_id = request.args.get('session_id')
     this_session = utilities.one_session(session_id)
     session_open = utilities.is_session_open(this_session['created_at'].to_pydatetime())
+
+    # todo: make this a function
+    if session_open:
+
+        if current_user.is_authenticated:
+            # When the session is less than 24 hours old and the user is logged in, any user with the link can view and add observations
+            pass
+
+        else:
+            # When the session is less than 24 hours old and the user is NOT logged in, the user can't see this page
+            return app.login_manager.unauthorized()
+
+    else:
+        # The session is more than 24 hours old
+
+        if this_session['publish']:
+            # It's a published session, anyone can view it
+            pass
+
+        else:
+
+            if current_user.is_authenticated:
+                # When the session is more than 24 hours old, the session is not published, and the user is logged in, the user must have the ability to see the session
+                this_user_sessions = utilities.list_of_user_sessions(current_user.user_id)
+            else:
+                this_user_sessions = []
+
+            if session_id not in this_user_sessions:
+                return app.login_manager.unauthorized()
+
 
     with open(os.path.join(app.root_path, 'queries/emoji_list.sql'), 'r') as f:
         available_emoji = pd.read_sql(text(f.read()), db.session.bind)
