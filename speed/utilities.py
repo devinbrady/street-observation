@@ -20,8 +20,14 @@ def list_of_user_sessions(user_id):
     Return a list of session_ids that the user is able to see
     """
 
-    with open(os.path.join(app.root_path, 'queries/user_sessions.sql'), 'r') as f:
-        user_sessions_df = pd.read_sql(text(f.read()), db.session.bind, params={'user_id': current_user.user_id})
+    if current_user.username == 'admin':
+        # Admin user is shown all sessions
+        with open(os.path.join(app.root_path, 'queries/user_sessions_all.sql'), 'r') as f:
+            user_sessions_df = pd.read_sql(text(f.read()), db.session.bind)
+
+    else:
+        with open(os.path.join(app.root_path, 'queries/user_sessions.sql'), 'r') as f:
+            user_sessions_df = pd.read_sql(text(f.read()), db.session.bind, params={'user_id': current_user.user_id})
 
     return user_sessions_df['session_id'].tolist()
 

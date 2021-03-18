@@ -55,18 +55,26 @@ def login():
 
 
 
-# @app.route('/register', methods=['GET', 'POST'])
-# def register():
-#     if current_user.is_authenticated:
-#         return redirect('/')  # redirect(url_for('index'))
-#     form = RegistrationForm(local_timezone='America/New_York')
-#     if form.validate_on_submit():
-#         user = models.User(username=form.username.data, local_timezone=form.local_timezone.data)
-#         user.set_password(form.password.data)
-#         db.session.add(user)
-#         db.session.commit()
-#         return redirect(url_for('login'))
-#     return render_template('register.html', form=form)
+@app.route('/register', methods=['GET', 'POST'])
+@login_required
+def register():
+    """
+    Create a new user
+    """
+
+    if current_user.username != 'admin':
+        return app.login_manager.unauthorized()
+
+    form = RegistrationForm(local_timezone='America/New_York')
+
+    if form.validate_on_submit():
+        user = models.User(username=form.username.data, local_timezone=form.local_timezone.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        return redirect(url_for('login'))
+
+    return render_template('register.html', form=form)
 
 
 
