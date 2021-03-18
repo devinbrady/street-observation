@@ -241,6 +241,7 @@ def session_handler():
         abort(404)
 
     this_session = utilities.one_session(session_id)
+    session_open = utilities.is_session_open(this_session['created_at'].to_pydatetime())
 
     # if we're still allowing this session to have new observations added to it... 
     session['session_id'] = session_id
@@ -307,6 +308,7 @@ def session_handler():
         , session_id=session_id
         , location_id=this_session['location_id']
         , location_name=this_session['location_name']
+        , session_open=session_open
         , vehicle_count=vehicle_count
         , max_speed=max_speed
         , median_speed=median_speed

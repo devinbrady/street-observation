@@ -7,6 +7,27 @@
 {% endblock %}
 {% block content %}
 
+<div style="height: 300px">
+  <h2>Speed Timer Session</h2>
+
+  <ul>
+    <li>Location Name: {{ location_name }}</li>
+    <li>Speed Limit: {{ '{:0.0f}'.format(speed_limit_value) }} {{ speed_units }}</li>
+    <li>Distance: {{ '{:0.1f}'.format(distance_value) }} {{ distance_units }}</li>
+    <li>Vehicle Count: {{ vehicle_count }}</li>
+    <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }} {{ speed_units }}</li>
+    <li>Median Speed: {{ '{:0.1f}'.format(median_speed) }} {{ speed_units }}</li>
+    <li>Most Recent Speed: {{ '{:0.1f}'.format(most_recent_speed) }} {{ speed_units }}</li>
+  </ul>
+
+  <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
+  <p>Location: <a href="/location?location_id={{ location_id }}">{{ location_name }}</a></p>
+
+</div>
+
+
+{% if session_open %}
+
 <script>
 $(document).ready(function(){
     var socket = io();
@@ -19,16 +40,6 @@ $(document).ready(function(){
     $('.timer_button').click(function() {
 
         var btn = document.getElementById("myButton");
-
-        // if (btn.value == "Activate Timer") {          
-        //     btn.value = "Start Timer";
-        //     btn.innerHTML = "Start Timer";
-        //     btn.classList.remove('btn-danger');
-        //     btn.classList.add('btn-success');
-
-        //     socket.emit('activate timer', {'session_id': session_id});
-
-        // }
 
         if (btn.value == "Start Timer") {
             btn.value = "End Timer";
@@ -86,32 +97,12 @@ $(document).ready(function(){
 });
 </script>
 
-<div style="height: 300px">
-  <h2>Speed Timer Session</h2>
-
-  <ul>
-    <li>Location Name: {{ location_name }}</li>
-    <li>Speed Limit: {{ '{:0.0f}'.format(speed_limit_value) }} {{ speed_units }}</li>
-    <li>Distance: {{ '{:0.1f}'.format(distance_value) }} {{ distance_units }}</li>
-    <li>Vehicle Count: {{ vehicle_count }}</li>
-    <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }} {{ speed_units }}</li>
-    <li>Median Speed: {{ '{:0.1f}'.format(median_speed) }} {{ speed_units }}</li>
-    <li>Most Recent Speed: {{ '{:0.1f}'.format(most_recent_speed) }} {{ speed_units }}</li>
-  </ul>
-
-  <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
-  <p>Location: <a href="/location?location_id={{ location_id }}">{{ location_name }}</a></p>
-
-</div>
-
-<h2>Timer</h2>
-
-<div style="height: 300px" class="d-grid gap-2 d-md-block">
-  
+  <h2>Timer</h2>
+  <div style="height: 300px" class="d-grid gap-2 d-md-block">
   <button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
-</div>
+  </div>
 
-
+{% endif %}
 
 <h2>Observed Vehicles</h2>
   <table class="table">
@@ -155,6 +146,7 @@ $(document).ready(function(){
 {% endif %}
 </p>
 
+{% if session_open %}
 <div>
   To invite another user to join this observation session, show them this QR code:
   <div>
@@ -162,6 +154,7 @@ $(document).ready(function(){
   </div>
   Alternatively, you can send them this link: <a href="{{ this_url }}">{{ this_url }}</a>
 </div>
+{% endif %}
 
 <br />
 <br />

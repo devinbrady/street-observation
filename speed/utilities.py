@@ -14,6 +14,20 @@ from . import db
 from . import models
 
 
+
+def is_session_open(created_at):
+    """
+    If a session is more than 24 hours old, do not allow new observations to be added
+    """
+
+    age_of_session = now_utc() - created_at
+
+    if age_of_session.days == 0:
+        return True
+    else:
+        return False
+
+
 def format_in_local_time(df, timestamp_column, tz_column, output_column, output_format):
     """
     Render a TZ-aware UTC column in a local timezone per the format specified

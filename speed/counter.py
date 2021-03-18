@@ -21,13 +21,7 @@ def counter_handler():
 
     session_id = request.args.get('session_id')
     this_session = utilities.one_session(session_id)
-
-    # If a session is more than 24 hours old, do not allow new observations to be added
-    age_of_session = utilities.now_utc() - this_session['created_at'].to_pydatetime()
-    if age_of_session.days == 0:
-        session_open = True
-    else:
-        session_open = False
+    session_open = utilities.is_session_open(this_session['created_at'].to_pydatetime())
 
     with open(os.path.join(app.root_path, 'queries/emoji_list.sql'), 'r') as f:
         available_emoji = pd.read_sql(text(f.read()), db.session.bind)
