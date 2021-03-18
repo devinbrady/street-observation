@@ -19,11 +19,12 @@
         {% if current_user.is_authenticated %}
             <div><a href="/logout">Logout user: {{ current_user.username }} </a></div>
             <div><a href="/user_sessions">Your Observation Sessions</a></div>
+            <div><a href='/location_list'>Your Locations</a></div>
         {% else %}
             <div><a href="/login">Login</a></div>
         {% endif %}
 
-        <div><a href='/location_list'>List of Locations</a></div>
+        <div><a href='/location_list_public'>List of Locations</a></div>
         <div><a href='/about'>About this site</a></div>
         <div><a href="/">Home</a></div>
         {% endblock %}
