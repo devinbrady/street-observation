@@ -1,10 +1,10 @@
 
 import os
 import pandas as pd
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from flask import current_app as app
 from flask import session, redirect, url_for, request, render_template, send_from_directory, Response, abort
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from . import db
 from . import models
@@ -95,14 +95,22 @@ def edit_location_settings():
 
 
 @app.route('/location_list', methods=['GET'])
-@login_required
 def list_locations():
     """
     Display a list of all locations
     """
 
+    if current_user.is_authenticated:
+        this_user_sessions = utilities.list_of_user_sessions(current_user.user_id)
+    else:
+        this_user_sessions = []
+
     with open(os.path.join(app.root_path, 'queries/locations_list.sql'), 'r') as f:
-        locations = pd.read_sql(f.read(), db.session.bind)
+        locations = pd.read_sql(
+            text(f.read()).bindparams(bindparam('this_user_sessions', expanding=True))
+            , db.session.bind
+            , params={'this_user_sessions': this_user_sessions}
+            )
 
     locations = utilities.format_in_local_time(
         locations
@@ -116,32 +124,6 @@ def list_locations():
 
     return render_template(
         'location_list.html'
-        , locations=locations
-        )
-
-
-
-@app.route('/location_list_public', methods=['GET'])
-def location_list_public():
-    """
-    Display a list of locations with sessions that users have chosen to publish
-    """
-
-    with open(os.path.join(app.root_path, 'queries/location_list_public.sql'), 'r') as f:
-        locations = pd.read_sql(f.read(), db.session.bind)
-
-    locations = utilities.format_in_local_time(
-        locations
-        , 'most_recent_observation'
-        , 'local_timezone'
-        , 'most_recent_observation_local'
-        , '%b %e, %Y %l:%M %p %Z'
-        )
-
-    locations['city_state'] = locations['city'] + ', ' + locations['state_code']
-
-    return render_template(
-        'location_list_public.html'
         , locations=locations
         )
 

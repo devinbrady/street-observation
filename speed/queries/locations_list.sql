@@ -12,7 +12,7 @@ loc.location_id
 , count(distinct co.counter_id) as num_counter_observations
 
 from locations loc
-left join sessions s using (location_id)
+inner join sessions s using (location_id)
 left join observations so on (
     so.session_id = s.session_id
     and so.observation_valid
@@ -22,6 +22,9 @@ left join counter_observations co on (
     co.session_id = s.session_id
     and co.observation_valid
     )
+
+where s.publish
+or s.session_id in :this_user_sessions
 
 group by 1,2,3,4,5
 order by first_start desc
