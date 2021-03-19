@@ -20,36 +20,7 @@
   <p><a href='/session_settings?session_id=new_session&location_id={{ location_id }}'>Start a new session at this location</a></p>
 
 
-<h2>Session List</h2>
-
-<table class="table">
-  <thead>
-  <tr>
-    <th scope="col">Date and Time</th>
-    <th scope="col">Location Name</th>
-    <th scope="col">Session Mode</th>
-    <th scope="col">Number of Valid Observations</th>
-    <th scope="col">Published</th>
-    <th scope="col">Description</th>
-  </tr>
-  </thead>
-  <tbody>
-  {% for _, row in session_list_df.iterrows() %}
-    <tr scope="row">
-    {% if row.session_mode == 'speed timer' %}
-      <td><a href="/session?session_id={{ row.session_id }}">{{ row.most_recent_observation_local }}</a></td>
-    {% elif row.session_mode == 'counter' %}
-      <td><a href="/counter?session_id={{ row.session_id }}">{{ row.most_recent_observation_local }}</a></td>
-    {% endif %}
-    <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_name }}</a></td>
-    <td>{{ row.session_mode }} </td>
-    <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
-    <td>{{ row.publish }} </td>
-    <td>{{ row.session_description }} </td>
-    </tr>
-  {% endfor %}
-</table>
-
+{% include "session_list_table.html" %}
 
 
 {% endblock %}

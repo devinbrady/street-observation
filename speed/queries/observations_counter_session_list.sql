@@ -1,7 +1,6 @@
 
 select
-loc.location_name
-, s.session_id
+s.session_id::varchar
 , s.session_description
 , co.counter_id
 , co.emoji_id
@@ -11,11 +10,8 @@ loc.location_name
 , e.glyph
 
 from counter_observations co
-inner join locations loc using (location_id)
 inner join sessions s using (session_id)
 inner join emoji e using (emoji_id)
 
 where co.observation_valid
-and loc.location_id = :location_id
-
-order by co.created_at
+and s.session_id in :counter_sessions

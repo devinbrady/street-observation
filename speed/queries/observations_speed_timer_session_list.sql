@@ -1,7 +1,6 @@
 
 select
-loc.location_name
-, s.session_id
+s.session_id::varchar
 , s.distance_meters
 , s.distance_value
 , s.distance_units
@@ -14,10 +13,7 @@ loc.location_name
 
 from observations o
 inner join sessions s using (session_id)
-inner join locations loc using (location_id)
 
 where o.observation_valid
 and o.end_time is not null
-and loc.location_id = :location_id
-
-order by start_time
+and s.session_id in :speed_timer_sessions

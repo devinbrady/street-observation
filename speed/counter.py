@@ -13,7 +13,6 @@ from . import utilities
 
 
 @app.route('/counter', methods=['GET'])
-@login_required
 def counter_handler():
     """
     Handle the GET on the counter page
@@ -145,7 +144,7 @@ def emoji_post():
 
     utilities.activate_user_session(session_id, local_timezone)
 
-    return redirect(f'/counter?location_id={location_id}&session_id={session_id}')
+    return redirect(f'/counter?session_id={session_id}')
 
 
 
@@ -163,7 +162,7 @@ def emoji_validity():
 
     toggle_valid_counter(counter_id, valid_action)
 
-    return redirect(f'/counter?location_id={location_id}&session_id={session_id}')
+    return redirect(f'/counter?session_id={session_id}')
 
 
 

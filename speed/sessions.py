@@ -122,7 +122,7 @@ def edit_session_settings():
             if form.session_mode.data == 'speed timer':
                 return redirect(f'session?session_id={session_id}')
             elif form.session_mode.data == 'counter':
-                return redirect(f'counter?session_id={session_id}&location_id={location_id}')
+                return redirect(f'counter?session_id={session_id}')
 
     
     return render_template(

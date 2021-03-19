@@ -3,7 +3,7 @@
 
 import os
 import pandas as pd
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from decimal import Decimal
 from dateutil import tz
 from datetime import datetime, timezone
@@ -36,10 +36,88 @@ def session_list_dataframe_for_display(location_id=None):
     session_list_df = all_sessions_df[(all_sessions_df.publish) | (all_sessions_df.session_id.isin(this_user_sessions))].copy()
 
     if len(session_list_df) > 0:
-        session_list_df = format_in_local_time(
-            session_list_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%b %e, %Y %l:%M %p %Z')
 
-    return session_list_df
+        session_list_df = format_in_local_time(
+            session_list_df, 'created_at', 'local_timezone', 'created_at_local', '%b %e, %Y %l:%M %p %Z')
+
+        columns_to_union = ['session_id', 'num_observations', 'result']
+
+
+        # Calculate stats about the speed timer sessions on this list
+        speed_timer_sessions = session_list_df[session_list_df.session_mode == 'speed timer']['session_id'].tolist()
+
+        if len(speed_timer_sessions) == 0:
+            timer_sessions = pd.DataFrame(columns=columns_to_union)
+        else:
+
+            with open(os.path.join(app.root_path, 'queries/observations_speed_timer_session_list.sql'), 'r') as f:
+                timer_obs = pd.read_sql(
+                    text(f.read()).bindparams(bindparam('speed_timer_sessions', expanding=True))
+                    , db.session.bind
+                    , params={'speed_timer_sessions': speed_timer_sessions}
+                    )
+
+            timer_obs['speed_value'] = timer_obs.apply(
+                lambda row: convert_to_speed_units(
+                    row.distance_meters
+                    , row.elapsed_seconds
+                    , row.speed_units
+                    )
+                , axis=1
+            )
+
+            timer_sessions = timer_obs.groupby('session_id').agg(
+                start_timestamp_min=('start_time', 'min')
+                , start_timestamp_max=('start_time', 'max')
+                , local_timezone=('local_timezone', 'first')
+                , speed_units=('speed_units', 'first')
+                , median_speed=('speed_value', 'median')
+                , num_observations=('observation_id', 'count')
+            ).reset_index()
+
+            timer_sessions['speed_units_short'] = timer_sessions['speed_units'].map(abbreviate_speed_units())
+            timer_sessions['result'] = timer_sessions.apply(
+                lambda row: f"Median speed: {row['median_speed']:.1f} {row['speed_units_short']}"
+                , axis=1)
+
+
+        # Calculate stats about the speed timer sessions on this list
+        counter_sessions = session_list_df[session_list_df.session_mode == 'counter']['session_id'].tolist()
+
+        if len(counter_sessions) == 0:
+            counter_sessions = pd.DataFrame(columns=columns_to_union)
+        else:
+
+            with open(os.path.join(app.root_path, 'queries/observations_counter_session_list.sql'), 'r') as f:
+                counter_obs = pd.read_sql(
+                    text(f.read()).bindparams(bindparam('counter_sessions', expanding=True))
+                    , db.session.bind
+                    , params={'counter_sessions': counter_sessions}
+                    )
+
+            # Within each session, rank emoji by the number of observations. Break ties with display_order (pedestrians first, trucks last)
+            emoji_by_session = counter_obs.groupby(['session_id', 'glyph']).agg(
+                num_observations=('counter_id', 'count')
+                , display_order=('display_order', 'first')
+                ).sort_values(by=['session_id', 'display_order'])
+            emoji_by_session_rank = emoji_by_session.groupby('session_id')['num_observations'].rank(method='first', ascending=False)
+            emoji_by_session_rank.name = 'emoji_rank'
+            df = pd.DataFrame(emoji_by_session_rank[emoji_by_session_rank <= 3]).reset_index().sort_values(by=['session_id', 'emoji_rank'])
+            common_emoji_df = 'Most common: ' + df.groupby('session_id')['glyph'].apply(', '.join)
+            common_emoji_df.name = 'result'
+
+            counter_num_obs = counter_obs.groupby('session_id').size()
+            counter_num_obs.name = 'num_observations'
+
+            counter_sessions = pd.merge(counter_num_obs, common_emoji_df, how='inner', left_index=True, right_index=True).reset_index()
+
+        # Combine timer and counter sessions
+        union_modes = pd.concat([timer_sessions[columns_to_union], counter_sessions[columns_to_union]])
+
+    session_list_results = pd.merge(session_list_df, union_modes, how='inner', on='session_id')
+    session_list_results = session_list_results.sort_values(by='created_at', ascending=False)
+
+    return session_list_results
 
 
 
