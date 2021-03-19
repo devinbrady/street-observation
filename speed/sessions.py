@@ -90,6 +90,11 @@ def edit_session_settings():
         location_id = this_session['location_id']
         location_name = this_session['location_name']
 
+        allow_session_view, allow_data_entry, allow_session_edit = utilities.session_permissions(this_session)
+
+        if not allow_session_edit:
+            return app.login_manager.unauthorized()
+
         form = SessionSettingsForm(
             speed_limit_value=this_session['speed_limit_value']
             , speed_units=this_session['speed_units']
@@ -113,7 +118,6 @@ def edit_session_settings():
                     , distance_units=form.distance_units.data
                     , speed_limit_value=form.speed_limit_value.data
                     , speed_units=form.speed_units.data
-                    , session_mode=form.session_mode.data
                     , session_description=form.session_description.data
                     , publish=form.publish.data
                     , updated_at=utilities.now_utc()
@@ -233,9 +237,9 @@ def session_handler():
 
     this_session = utilities.one_session(session_id)
 
-    allow_page_view, allow_data_entry = utilities.session_permissions(this_session)
+    allow_session_view, allow_data_entry, allow_session_edit = utilities.session_permissions(this_session)
 
-    if not allow_page_view:
+    if not allow_session_view:
         return app.login_manager.unauthorized()
 
     if allow_data_entry:
@@ -306,6 +310,7 @@ def session_handler():
         , location_id=this_session['location_id']
         , location_name=this_session['location_name']
         , allow_data_entry=allow_data_entry
+        , allow_session_edit=allow_session_edit
         , vehicle_count=vehicle_count
         , max_speed=max_speed
         , median_speed=median_speed

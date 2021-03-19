@@ -194,6 +194,7 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(80))
     username = db.Column(db.String(120))
     password_hash = db.Column(db.String(128))
+    # superuser = db.Column(db.Boolean, nullable=False)
     # email = db.Column(db.String(120))
     # phone_number = db.Column(db.String(120))
     local_timezone = db.Column(db.String, nullable=False)
@@ -219,6 +220,7 @@ class User(UserMixin, db.Model):
         utc_now = utilities.now_utc()
         self.created_at = utc_now
         self.updated_at = utc_now
+        # self.superuser = False
 
 
 

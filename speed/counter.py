@@ -26,9 +26,9 @@ def counter_handler():
         , '%b %e, %Y'
         )
 
-    allow_page_view, allow_data_entry = utilities.session_permissions(this_session)
+    allow_session_view, allow_data_entry, allow_session_edit = utilities.session_permissions(this_session)
 
-    if not allow_page_view:
+    if not allow_session_view:
         return app.login_manager.unauthorized()
 
 
@@ -82,6 +82,7 @@ def counter_handler():
     return render_template(
         'counter.html'
         , allow_data_entry=allow_data_entry
+        , allow_session_edit=allow_session_edit
         , emoji_count=emoji_count
         , emoji_observations=emoji_observations
         , session_id=session_id

@@ -20,7 +20,10 @@
     <li>Most Recent Speed: {{ '{:0.1f}'.format(most_recent_speed) }} {{ speed_units_short }}</li>
   </ul>
 
-  <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
+  {% if allow_session_edit %}
+    <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
+  {% endif %}
+  
   <p>Location: <a href="/location?location_id={{ location_id }}">{{ location_name }}</a></p>
 
 </div>

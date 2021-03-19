@@ -6,7 +6,6 @@ set
     , distance_units = :distance_units
     , speed_limit_value = :speed_limit_value
     , speed_units = :speed_units
-    , session_mode = :session_mode
     , session_description = :session_description
     , publish = :publish
     , updated_at = :updated_at
