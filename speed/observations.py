@@ -30,7 +30,7 @@ def one_observation(observation_id):
     with open(os.path.join(app.root_path, 'queries/observations_one.sql'), 'r') as f:
         this_obs = pd.read_sql(text(f.read()), db.session.bind, params={'observation_id': observation_id})
 
-    this_obs['speed_value'] = this_obs.apply(lambda row: utilities.convert_speed_for_display(
+    this_obs['speed_value'] = this_obs.apply(lambda row: utilities.convert_to_speed_units(
             row['distance_meters']
             , row['elapsed_seconds']
             , row['speed_units']

@@ -141,25 +141,9 @@ def get_session_list():
     List all sessions the current user is connected to
     """
 
-    with open(os.path.join(app.root_path, 'queries/session_list.sql'), 'r') as f:
-        all_sessions_df = pd.read_sql(text(f.read()), db.session.bind)
-
-
-    if current_user.is_authenticated:
-        this_user_sessions = utilities.list_of_user_sessions(current_user.user_id)
-    else:
-        this_user_sessions = []
-
-    # Only display published sessions and private sessions connected to this user
-    session_list_df = all_sessions_df[(all_sessions_df.publish) | (all_sessions_df.session_id.isin(this_user_sessions))].copy()
-
-    if len(session_list_df) > 0:
-        session_list_df = utilities.format_in_local_time(
-            session_list_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%b %e, %Y %l:%M %p %Z')
-
     return render_template(
         'session_list.html'
-        , session_list_df=session_list_df
+        , session_list_df=utilities.session_list_dataframe_for_display()
         )
 
 
@@ -308,13 +292,15 @@ def session_handler():
     else:
 
         completed_observations['speed_value'] = completed_observations.apply(
-            lambda row: utilities.convert_speed_for_display(
+            lambda row: utilities.convert_to_speed_units(
                 row.distance_meters
                 , row.elapsed_seconds
                 , row.speed_units
                 )
             , axis=1
             )
+
+        completed_observations['speed_units_short'] = completed_observations['speed_units'].map(utilities.abbreviate_speed_units())
 
         completed_observations = utilities.format_in_local_time(completed_observations, 'start_time', 'local_timezone', 'start_time_local', '%l:%M:%S %p')
 
@@ -348,12 +334,12 @@ def session_handler():
         , median_speed=median_speed
         , most_recent_speed=most_recent_speed
         , speed_limit_value=this_session['speed_limit_value']
-        , speed_units=this_session['speed_units']
+        , speed_units_short=utilities.abbreviate_speed_units()[this_session['speed_units']]
         , distance_value=this_session['distance_value']
         , distance_units=this_session['distance_units']
         , qr=plot_qr_code()
         , this_url=request.url
-        , df=completed_observations
+        , completed_observations=completed_observations
         )
 
 
@@ -395,7 +381,7 @@ def create_histogram(session_id):
         session_observations = pd.read_sql(text(f.read()), db.session.bind, params={'session_id': session_id})
 
     session_observations['speed_value'] = session_observations.apply(
-        lambda row: utilities.convert_speed_for_display(
+        lambda row: utilities.convert_to_speed_units(
             row.distance_meters
             , row.elapsed_seconds
             , row.speed_units

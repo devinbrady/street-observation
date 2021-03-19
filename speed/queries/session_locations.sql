@@ -8,7 +8,7 @@ loc.location_id
 , s.session_id::varchar
 , s.publish
 , min(coalesce(so.start_time, co.created_at, loc.created_at)) as first_start
-, greatest(max(so.start_time), max(co.created_at)) as most_recent_observation
+, greatest(max(so.start_time), max(co.created_at), max(s.created_at)) as most_recent_observation
 , count(distinct so.observation_id) as num_speed_observations
 , count(distinct co.counter_id) as num_counter_observations
 

@@ -1,7 +1,7 @@
 
 select
 s.session_id::varchar
-, loc.location_id
+, loc.location_id::varchar
 , loc.location_name
 , s.session_mode
 , s.session_description

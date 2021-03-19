@@ -15,6 +15,35 @@ from . import models
 
 
 
+def session_list_dataframe_for_display(location_id=None):
+    """
+    Return dataframe containing the sessions of all modes that the current user is entitled to see
+    """
+
+    with open(os.path.join(app.root_path, 'queries/session_list.sql'), 'r') as f:
+        all_sessions_df = pd.read_sql(text(f.read()), db.session.bind)
+
+    # If a location_id is provided, narrow sessions to those that occur at the location
+    if location_id:
+        all_sessions_df = all_sessions_df[all_sessions_df['location_id'] == location_id].copy()
+
+    if current_user.is_authenticated:
+        this_user_sessions = list_of_user_sessions(current_user.user_id)
+    else:
+        this_user_sessions = []
+
+    # Only display published sessions and private sessions connected to this user
+    session_list_df = all_sessions_df[(all_sessions_df.publish) | (all_sessions_df.session_id.isin(this_user_sessions))].copy()
+
+    if len(session_list_df) > 0:
+        session_list_df = format_in_local_time(
+            session_list_df, 'most_recent_observation', 'local_timezone', 'most_recent_observation_local', '%b %e, %Y %l:%M %p %Z')
+
+    return session_list_df
+
+
+
+
 def list_of_user_sessions(user_id):
     """
     Return a list of session_ids that the user is able to see
@@ -48,6 +77,7 @@ def is_session_open(created_at):
     return session_time_valid
 
 
+
 def format_in_local_time(df, timestamp_column, tz_column, output_column, output_format):
     """
     Render a TZ-aware UTC column in a local timezone per the format specified
@@ -65,6 +95,13 @@ def format_in_local_time(df, timestamp_column, tz_column, output_column, output_
     # df[output_column] = df.groupby(tz_column)[timestamp_column].transform(lambda x: x.dt.tz_convert(x.name))
 
     return df
+
+
+
+def convert_timestamp_to_local_time(timestamp_utc, local_timezone, output_format):
+
+    local_tz = tz.gettz(local_timezone)
+    return timestamp_utc.astimezone(local_tz).strftime(output_format)
 
 
 
@@ -100,7 +137,10 @@ def convert_distance_to_meters(value, unit):
 
 
 
-def convert_speed_for_display(distance_meters, elapsed_seconds, speed_units):
+def convert_to_speed_units(distance_meters, elapsed_seconds, speed_units):
+    """
+    Convert the speed, always stored in meters and seconds, to the specified speed_units
+    """
 
     if speed_units == 'miles per hour':
         return (distance_meters / 1609.34) / (elapsed_seconds / 3600)
@@ -120,9 +160,17 @@ def convert_speed_for_display(distance_meters, elapsed_seconds, speed_units):
 
 
 
-def display_speed_units(speed_units):
+def abbreviate_speed_units():
+    """
+    Return dictionary with abbreviation for speed units, for Series.map() usage
+    """
 
-    return speed_units.replace('_', ' ')
+    return {
+        'miles per hour': 'mph'
+        , 'kilometers per hour': 'kph'
+        , 'meters per second': 'm per sec'
+        , 'feet per second': 'ft per sec'
+    }
 
 
 

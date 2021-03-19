@@ -7,7 +7,6 @@
   <h2>Location: {{ location_name }}</h2>
 
   <ul>
-    <li>Location ID: {{ location_id }}</li>
     <li>Local Timezone: {{ local_timezone }}</li>
     <li>Street Address: {{ street_address }}</li>
     <li>City: {{ city }}</li>
@@ -21,53 +20,32 @@
   <p><a href='/session_settings?session_id=new_session&location_id={{ location_id }}'>Start a new session at this location</a></p>
 
 
-  <h3>Speed Observation Sessions</h3>
+<h2>Session List</h2>
 
-  <table class="table">
+<table class="table">
   <thead>
   <tr>
-    <th scope="col">Session Date and Time</th>
-    <th scope="col">Duration</th>
-    <th scope="col">Distance</th>
-    <th scope="col">Median Speed</th>
-    <th scope="col">Number of Observations</th>
+    <th scope="col">Date and Time</th>
+    <th scope="col">Location Name</th>
+    <th scope="col">Session Mode</th>
+    <th scope="col">Number of Valid Observations</th>
+    <th scope="col">Published</th>
     <th scope="col">Description</th>
   </tr>
   </thead>
   <tbody>
-  {% for _, row in sessions_at_location.iterrows() %}
+  {% for _, row in session_list_df.iterrows() %}
     <tr scope="row">
-    <td><a href="/session?session_id={{ row.session_id }}">{{ row.start_timestamp_local }}</a></td>
-    <td>{{ '%0.0f'|format(row.session_duration_minutes|float) }} minute{{ 's' if row.session_duration_minutes|round > 1 }}</td>
-    <td>{{ '{:0.0f}'.format(row.distance_value) }} {{ row.distance_units }}</td>
-    <td>{{ '{:0.1f}'.format(row.median_speed) }} {{ row.speed_units }}</td>
+    {% if row.session_mode == 'speed timer' %}
+      <td><a href="/session?session_id={{ row.session_id }}">{{ row.most_recent_observation_local }}</a></td>
+    {% elif row.session_mode == 'counter' %}
+      <td><a href="/counter?session_id={{ row.session_id }}">{{ row.most_recent_observation_local }}</a></td>
+    {% endif %}
+    <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_name }}</a></td>
+    <td>{{ row.session_mode }} </td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
-    <td>{{ row.session_description }}</td>
-    </tr>
-  {% endfor %}
-</table>
-
-
-  <h3>Counter Observation Sessions</h3>
-
-  <table class="table">
-  <thead>
-  <tr>
-    <th scope="col">Session Date and Time</th>
-    <th scope="col">Duration</th>
-    <th scope="col">Number of Observations</th>
-    <th scope="col">Most Common Emoji</th>
-    <th scope="col">Description</th>
-  </tr>
-  </thead>
-  <tbody>
-  {% for _, row in counter_sessions_at_location.iterrows() %}
-    <tr scope="row">
-    <td><a href="/counter?session_id={{ row.session_id }}">{{ row.start_timestamp_local }}</a></td>
-    <td>{{ '%0.0f'|format(row.session_duration_minutes|float) }} minute{{ 's' if row.session_duration_minutes|round > 1 }}</td>
-    <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
-    <td>{{ row.most_common_emoji }}</td>
-    <td>{{ row.session_description }}</td>
+    <td>{{ row.publish }} </td>
+    <td>{{ row.session_description }} </td>
     </tr>
   {% endfor %}
 </table>
