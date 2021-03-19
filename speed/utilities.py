@@ -113,11 +113,11 @@ def session_list_dataframe_for_display(location_id=None):
 
         # Combine timer and counter sessions
         union_modes = pd.concat([timer_sessions[columns_to_union], counter_sessions[columns_to_union]])
+        session_list_df = pd.merge(session_list_df, union_modes, how='inner', on='session_id')
 
-    session_list_results = pd.merge(session_list_df, union_modes, how='inner', on='session_id')
-    session_list_results = session_list_results.sort_values(by='created_at', ascending=False)
+    session_list_df = session_list_df.sort_values(by='created_at', ascending=False)
 
-    return session_list_results
+    return session_list_df
 
 
 
