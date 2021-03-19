@@ -232,38 +232,15 @@ def session_handler():
         abort(404)
 
     this_session = utilities.one_session(session_id)
-    session_open = utilities.is_session_open(this_session['created_at'].to_pydatetime())
 
-    if session_open:
+    allow_page_view, allow_data_entry = utilities.session_permissions(this_session)
 
-        if current_user.is_authenticated:
-            # When the session is less than 24 hours old and the user is logged in, any user with the link can add observations
-            session['session_id'] = session_id
-            utilities.activate_user_session(session_id, this_session['local_timezone'])
+    if not allow_page_view:
+        return app.login_manager.unauthorized()
 
-        else:
-            # When the session is less than 24 hours old and the user is NOT logged in, the user can't see this page
-            return app.login_manager.unauthorized()
-
-    else:
-        # The session is more than 24 hours old
-
-        if this_session['publish']:
-            # It's a published session, anyone can view it
-            pass
-
-        else:
-
-            if current_user.is_authenticated:
-                # When the session is more than 24 hours old, the session is not published, and the user is logged in, the user must have the ability to see the session
-                this_user_sessions = utilities.list_of_user_sessions(current_user.user_id)
-            else:
-                this_user_sessions = []
-
-            if session_id not in this_user_sessions:
-                return app.login_manager.unauthorized()
-
-
+    if allow_data_entry:
+        session['session_id'] = session_id
+        utilities.activate_user_session(session_id, this_session['local_timezone'])
 
 
     with open(os.path.join(app.root_path, 'queries/observations_list.sql'), 'r') as f:
@@ -328,7 +305,7 @@ def session_handler():
         , session_id=session_id
         , location_id=this_session['location_id']
         , location_name=this_session['location_name']
-        , session_open=session_open
+        , allow_data_entry=allow_data_entry
         , vehicle_count=vehicle_count
         , max_speed=max_speed
         , median_speed=median_speed

@@ -86,7 +86,7 @@ CREATE TABLE emoji (
 
 insert into emoji (emoji_id, emoji_name, glyph, display_order, emoji_description)
     values 
-    (128694, 'person-walking', '🚶', 0, 'A person walking, of any age')
+    (128694, 'person-walking', '🚶', 0, 'A person walking or running, of any age or gender')
     , (9855, 'wheelchair-symbol', '♿️', 1, 'A wheelchair, whether motorized or not')
     , (128021, 'dog', '🐕', 2, 'A dog')
     , (128690, 'bicycle', '🚲', 3, 'A bicycle or e-bike')

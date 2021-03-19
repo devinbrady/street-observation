@@ -26,7 +26,7 @@
 </div>
 
 
-{% if session_open %}
+{% if allow_data_entry %}
 
 <script>
 $(document).ready(function(){
@@ -146,7 +146,7 @@ $(document).ready(function(){
 {% endif %}
 </p>
 
-{% if session_open %}
+{% if allow_data_entry %}
 <div>
   To invite another user to join this observation session, show them this QR code:
   <div>

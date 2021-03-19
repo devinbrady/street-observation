@@ -1,7 +1,8 @@
 -- Return information about one session
 
 select
-s.location_id
+s.session_id::varchar
+, s.location_id::varchar
 , s.session_mode
 , s.distance_meters
 , s.distance_value

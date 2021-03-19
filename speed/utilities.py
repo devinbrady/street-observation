@@ -15,6 +15,58 @@ from . import models
 
 
 
+def session_permissions(this_session):
+
+    # Default to not allowing new observations to be collected or the page to be viewed
+    allow_page_view = False
+    allow_data_entry = False
+
+    is_session_recent = session_recency(this_session['created_at'].to_pydatetime())
+
+    if is_session_recent:
+
+        if current_user.is_authenticated:
+            # When the session is less than 24 hours old, any logged-in user with the link can add observations
+            allow_page_view = True
+            allow_data_entry = True
+
+
+        elif this_session['publish']:
+            # When the session is less than 24 hours old and the session is published, anyone can view the page but not add data
+            allow_page_view = True
+            allow_data_entry = False
+
+        else:
+            # When the session is less than 24 hours old and the user is NOT logged in, the user can't see this page
+            allow_page_view = False
+            allow_data_entry = False
+
+
+    else:
+        # The session is more than 24 hours old, don't allow anyone to add more data
+        allow_data_entry = False
+
+        if this_session['publish']:
+            # It's a published session, anyone can view it
+            allow_page_view = True
+
+        else:
+
+            if current_user.is_authenticated:
+                # When the session is more than 24 hours old, the session is not published, and the user is logged in, the user must have the ability to see the session
+                this_user_sessions = list_of_user_sessions(current_user.user_id)
+            else:
+                this_user_sessions = []
+
+            if this_session['session_id'] in this_user_sessions:
+                allow_page_view = True
+            else:
+                allow_page_view = False
+
+    return allow_page_view, allow_data_entry
+
+
+
 def session_list_dataframe_for_display(location_id=None):
     """
     Return dataframe containing the sessions of all modes that the current user is entitled to see
@@ -140,7 +192,7 @@ def list_of_user_sessions(user_id):
 
 
 
-def is_session_open(created_at):
+def session_recency(created_at):
     """
     If a session is more than 24 hours old, do not allow new observations to be added
     """

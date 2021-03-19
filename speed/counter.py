@@ -20,41 +20,16 @@ def counter_handler():
 
     session_id = request.args.get('session_id')
     this_session = utilities.one_session(session_id)
-    session_open = utilities.is_session_open(this_session['created_at'].to_pydatetime())
     session_date = utilities.convert_timestamp_to_local_time(
         this_session['created_at'].to_pydatetime()
         , this_session['local_timezone']
         , '%b %e, %Y'
         )
 
-    # todo: make this a function
-    if session_open:
+    allow_page_view, allow_data_entry = utilities.session_permissions(this_session)
 
-        if current_user.is_authenticated:
-            # When the session is less than 24 hours old and the user is logged in, any user with the link can view and add observations
-            pass
-
-        else:
-            # When the session is less than 24 hours old and the user is NOT logged in, the user can't see this page
-            return app.login_manager.unauthorized()
-
-    else:
-        # The session is more than 24 hours old
-
-        if this_session['publish']:
-            # It's a published session, anyone can view it
-            pass
-
-        else:
-
-            if current_user.is_authenticated:
-                # When the session is more than 24 hours old, the session is not published, and the user is logged in, the user must have the ability to see the session
-                this_user_sessions = utilities.list_of_user_sessions(current_user.user_id)
-            else:
-                this_user_sessions = []
-
-            if session_id not in this_user_sessions:
-                return app.login_manager.unauthorized()
+    if not allow_page_view:
+        return app.login_manager.unauthorized()
 
 
     with open(os.path.join(app.root_path, 'queries/emoji_list.sql'), 'r') as f:
@@ -106,7 +81,7 @@ def counter_handler():
 
     return render_template(
         'counter.html'
-        , session_open=session_open
+        , allow_data_entry=allow_data_entry
         , emoji_count=emoji_count
         , emoji_observations=emoji_observations
         , session_id=session_id

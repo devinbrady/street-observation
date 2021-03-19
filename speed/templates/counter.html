@@ -12,7 +12,7 @@
     {% for _, row in emoji_count.iterrows() %}
         <div class="col p-3">
 
-          {% if session_open %}
+          {% if allow_data_entry %}
             <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
                 <div class="d-grid">
                     <button type="submit" class="btn btn-outline-primary" style="font-size:50px">
@@ -97,6 +97,7 @@
   </tbody>
 </table>
 
+<!-- todo: make this hours and minutes  -->
 <p>Session duration: {{ '%0.2f'|format(session_duration_hours|float) }} hours</p>
 <p>Date: {{ session_date }}</p>
 
