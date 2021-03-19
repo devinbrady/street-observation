@@ -22,6 +22,11 @@ def counter_handler():
     session_id = request.args.get('session_id')
     this_session = utilities.one_session(session_id)
     session_open = utilities.is_session_open(this_session['created_at'].to_pydatetime())
+    session_date = utilities.convert_timestamp_to_local_time(
+        this_session['created_at'].to_pydatetime()
+        , this_session['local_timezone']
+        , '%b %e, %Y'
+        )
 
     # todo: make this a function
     if session_open:
@@ -109,6 +114,7 @@ def counter_handler():
         , location_id=this_session['location_id']
         , location_name=this_session['location_name']
         , session_duration_hours=session_duration_hours
+        , session_date=session_date
         )
 
 
