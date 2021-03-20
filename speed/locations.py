@@ -132,6 +132,8 @@ def list_locations():
 
     locations['city_state'] = locations['city'] + ', ' + locations['state_code']
 
+    locations = locations.sort_values(by='most_recent_observation', ascending=False)
+
     return render_template(
         'location_list.html'
         , locations=locations
