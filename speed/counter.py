@@ -56,16 +56,18 @@ def counter_handler():
         if len(emoji_observations) == 1:
             # Only one emoji has been observed, the session has no duration yet, so the per-hour calculation can't be done
             emoji_count['observations_per_hour'] = 0
-            session_duration_hours = 0
+            session_duration_string = '0 minutes'
 
         else:
             # Calculate the duration of this session so far
             earliest_time = emoji_observations['created_at'].min()
             latest_time = emoji_observations['created_at'].max()
-            session_duration_hours = (latest_time - earliest_time).total_seconds() / 3600
+
+            session_duration_seconds = (latest_time - earliest_time).total_seconds()
+            session_duration_string = utilities.hour_minute_string(session_duration_seconds)
 
             # Calculate the number of emoji per hour
-            emoji_count['observations_per_hour'] = emoji_count['num_observations'] / session_duration_hours
+            emoji_count['observations_per_hour'] = emoji_count['num_observations'] / (session_duration_seconds / 3600)
 
 
     else:
@@ -74,7 +76,7 @@ def counter_handler():
         emoji_count = available_emoji.copy()
         emoji_count['num_observations'] = 0
         emoji_count['observations_per_hour'] = 0
-        session_duration_hours = 0
+        session_duration_string = 0
 
         emoji_observations = pd.DataFrame()
 
@@ -88,7 +90,7 @@ def counter_handler():
         , session_id=session_id
         , location_id=this_session['location_id']
         , location_name=this_session['location_name']
-        , session_duration_hours=session_duration_hours
+        , session_duration_string=session_duration_string
         , session_date=session_date
         )
 

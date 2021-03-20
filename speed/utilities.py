@@ -2,6 +2,7 @@
 """
 
 import os
+import numpy as np
 import pandas as pd
 from sqlalchemy import text, bindparam
 from decimal import Decimal
@@ -182,7 +183,6 @@ def session_list_dataframe_for_display(location_id=None):
 
 
 
-
 def list_of_user_sessions(user_id):
     """
     Return a list of session_ids that the user is able to see
@@ -214,6 +214,27 @@ def session_recency(created_at):
         session_time_valid = False
 
     return session_time_valid
+
+
+
+def hour_minute_string(total_seconds):
+    """
+    Convert a float number of seconds to a string spelling out the hours and minutes
+    """
+
+    total_minutes = total_seconds / 60
+    total_hours = total_minutes / 60
+    hours_floor = np.floor(total_hours)
+    minutes_remainder = total_minutes % 60
+
+    if hours_floor > 0:
+        duration_string = f'{hours_floor:.0f} hour{"s" if hours_floor > 1 else ""} and '
+    else:
+        duration_string = ''
+
+    duration_string += f'{minutes_remainder:.0f} minute{"s" if minutes_remainder >= 1.5 else ""}'
+
+    return duration_string
 
 
 

@@ -41,6 +41,36 @@
 
 <p>Location: <a href="/location?location_id={{ location_id }}">{{ location_name }}</a></p>
 
+<p>Session duration: {{ session_duration_string }}</p>
+
+
+<h2>Stats</h2>
+<table class="table">
+  <thead>
+  <tr>
+    <th scope="col">Emoji</th>
+    <th scope="col">Count per Hour</th>
+    <th scope="col">Description</th>
+  </tr>
+  </thead>
+  <tbody>
+
+    {% for _, row in emoji_count.iterrows() %}
+
+    <tr scope="row">
+      <td style="font-size:30px">&#{{ row.emoji_id }}</td>
+      <td> {{ '%0.1f'|format(row.observations_per_hour|float) }} </td>
+      <td> {{ row.emoji_description }} </td>
+
+    </tr>
+
+    {% endfor %}
+  </tbody>
+</table>
+
+<p>Date: {{ session_date }}</p>
+
+
 <h2>Observed Emoji</h2>
   <table class="table">
   <thead>
@@ -75,33 +105,5 @@
 </tbody>
 </table>
 
-
-<h2>Stats</h2>
-<table class="table">
-  <thead>
-  <tr>
-    <th scope="col">Emoji</th>
-    <th scope="col">Count per Hour</th>
-    <th scope="col">Description</th>
-  </tr>
-  </thead>
-  <tbody>
-
-    {% for _, row in emoji_count.iterrows() %}
-
-    <tr scope="row">
-      <td style="font-size:30px">&#{{ row.emoji_id }}</td>
-      <td> {{ '%0.1f'|format(row.observations_per_hour|float) }} </td>
-      <td> {{ row.emoji_description }} </td>
-
-    </tr>
-
-    {% endfor %}
-  </tbody>
-</table>
-
-<!-- todo: make this hours and minutes  -->
-<p>Session duration: {{ '%0.2f'|format(session_duration_hours|float) }} hours</p>
-<p>Date: {{ session_date }}</p>
 
 {% endblock %}
