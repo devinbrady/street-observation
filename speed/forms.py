@@ -138,13 +138,22 @@ class LocationSettingsForm(FlaskForm):
         , render_kw={'class': 'form-control'}
     )
 
-    # location_latitude
-    # location_longitude
-
     location_description = StringField(
         'Location Description'
         , render_kw={'class': 'form-control'}
     )
+
+
+    location_latitude = DecimalField(
+        'Latitude'
+        , render_kw={'class': 'form-control', 'id': 'lat'}
+        )
+
+    location_longitude = DecimalField(
+        'Longitude'
+        , render_kw={'class': 'form-control', 'id': 'lon'}
+        )
+
 
     # delete
 

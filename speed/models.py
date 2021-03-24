@@ -43,6 +43,7 @@ class Location(db.Model):
     __tablename__ = 'locations'
     location_id = db.Column(UUID(as_uuid=True), primary_key=True)
     location_name = db.Column(db.String, nullable=False)
+    managed_by_user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.user_id'), nullable=False)
     street_address = db.Column(db.String)
     city = db.Column(db.String)
     state_code = db.Column(db.String(2))
@@ -65,6 +66,9 @@ class Location(db.Model):
             , zip_code
             , location_description
             , local_timezone
+            , managed_by_user_id
+            , location_latitude
+            , location_longitude
         ):
 
         self.location_id = location_id
@@ -73,10 +77,11 @@ class Location(db.Model):
         self.city = city
         self.state_code = state_code
         self.zip_code = zip_code
-        self.location_latitude = None
-        self.location_longitude = None
         self.location_description = location_description
         self.local_timezone = local_timezone
+        self.managed_by_user_id = managed_by_user_id
+        self.location_latitude = location_latitude
+        self.location_longitude = location_longitude
 
         # Defaults when record created
         utc_now = utilities.now_utc()
@@ -194,7 +199,7 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(80))
     username = db.Column(db.String(120))
     password_hash = db.Column(db.String(128))
-    # superuser = db.Column(db.Boolean, nullable=False)
+    is_admin = db.Column(db.Boolean, nullable=False)
     # email = db.Column(db.String(120))
     # phone_number = db.Column(db.String(120))
     local_timezone = db.Column(db.String, nullable=False)
@@ -211,6 +216,9 @@ class User(UserMixin, db.Model):
     def get_id(self):
         return self.user_id
 
+    def get_admin_status(self):
+        return self.is_admin
+
     def __init__(self, username, local_timezone):
 
         self.user_id = generate_uuid()
@@ -220,7 +228,7 @@ class User(UserMixin, db.Model):
         utc_now = utilities.now_utc()
         self.created_at = utc_now
         self.updated_at = utc_now
-        # self.superuser = False
+        self.is_admin = False
 
 
 
@@ -231,7 +239,7 @@ class UserSession(db.Model):
 
     __tablename__ = 'user_sessions'
 
-    # todo: maybe this ID should be a concat of user and session
+    # todo: maybe this ID should be a concat of user and session, data type of string, not UUID
     user_session_id = db.Column(UUID(as_uuid=True), primary_key=True)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.user_id'), nullable=False)
     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)

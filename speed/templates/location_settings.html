@@ -3,6 +3,7 @@
 
 {% block content %}
 
+
   <div class="form-wrapper">
     <h2 class="title">Location Settings</h2>
 
@@ -94,11 +95,68 @@
         {% endif %}
       </div>
 
+      <h4>Coordinates</h4>
+
+      <div onclick="getLocation()" class="btn btn-secondary">Use my current location</div>
+
+      <p id="coordinate_output"></p>
+
+      <div class="form-group">
+        {{ form.location_latitude.label }}
+        {{ form.location_latitude }}
+        {% if form.location_latitude.errors %}
+          <ul class="errors">
+            {% for error in form.location_latitude.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        {{ form.location_longitude.label }}
+        {{ form.location_longitude }}
+        {% if form.location_longitude.errors %}
+          <ul class="errors">
+            {% for error in form.location_longitude.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+
+
       {{ form.submit }}
 
       <!-- todo: add a Cancel button here -->
 
       </form>
   </div>
+
+      <script>
+      var x = document.getElementById("coordinate_output");
+
+      var lat = document.getElementById("lat");
+      var lon = document.getElementById("lon");
+
+
+      function getLocation() {
+        if (navigator.geolocation) {
+          x.innerHTML = "Determining your device's location, please wait..."
+          navigator.geolocation.getCurrentPosition(showPosition);
+        } else {
+          x.innerHTML = "Geolocation is not supported by this browser.";
+        }
+      }
+
+      function showPosition(position) {
+        x.innerHTML = "Determining your device's location, please wait... success!";
+
+        lat.value = position.coords.latitude;
+        lon.value = position.coords.longitude;
+      }
+      </script>
+
 
 {% endblock %}

@@ -47,6 +47,9 @@ def edit_location_settings():
                 , zip_code=form.zip_code.data
                 , location_description=form.location_description.data
                 , local_timezone=form.local_timezone.data
+                , managed_by_user_id=current_user.user_id
+                , location_latitude=form.location_latitude.data
+                , location_longitude=form.location_longitude.data
                 )
             db.session.add(new_location_object)
             db.session.commit()
