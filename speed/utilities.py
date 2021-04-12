@@ -88,17 +88,13 @@ def session_permissions(this_session):
 
 
 
-def session_list_dataframe_for_display(location_id=None):
+def session_list_dataframe_for_display():
     """
     Return dataframe containing the sessions of all modes that the current user is entitled to see
     """
 
     with open(os.path.join(app.root_path, 'queries/session_list.sql'), 'r') as f:
         all_sessions_df = pd.read_sql(text(f.read()), db.session.bind)
-
-    # If a location_id is provided, narrow sessions to those that occur at the location
-    if location_id:
-        all_sessions_df = all_sessions_df[all_sessions_df['location_id'] == location_id].copy()
 
     if current_user.is_authenticated:
         this_user_sessions = list_of_user_sessions(current_user.user_id)
@@ -371,19 +367,6 @@ def abbreviate_speed_units():
         , 'meters per second': 'm per sec'
         , 'feet per second': 'ft per sec'
     }
-
-
-
-def one_location(location_id):
-    """
-    Return dataframe containing information about one location
-    """
-
-    with open(os.path.join(app.root_path, 'queries/locations_one.sql'), 'r') as f:
-        locations_df = pd.read_sql(text(f.read()), db.session.bind, params={'location_id': location_id})
-        this_location = locations_df.squeeze()
-
-    return this_location
 
 
 

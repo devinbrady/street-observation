@@ -17,15 +17,6 @@ def generate_uuid():
 
 
 
-def get_location_timezone(location_id):
-
-    query = text('select local_timezone from locations where location_id = :location_id')
-    df = pd.read_sql(query, db.session.bind, params={'location_id': location_id})
-
-    return df['local_timezone'].values[0]
-
-
-
 def get_session_timezone(session_id):
 
     query = text('select local_timezone from sessions where session_id = :session_id')
@@ -35,59 +26,15 @@ def get_session_timezone(session_id):
 
 
 
-class Location(db.Model):
+def user_is_admin(user_id):
     """
-    Store information about the physical location where an observation session occurs
+    Return boolean indicating whether the user is an admin
     """
 
-    __tablename__ = 'locations'
-    location_id = db.Column(UUID(as_uuid=True), primary_key=True)
-    location_name = db.Column(db.String, nullable=False)
-    managed_by_user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.user_id'), nullable=False)
-    street_address = db.Column(db.String)
-    city = db.Column(db.String)
-    state_code = db.Column(db.String(2))
-    zip_code = db.Column(db.String(5))
-    location_latitude = db.Column(db.Float)
-    location_longitude = db.Column(db.Float)
-    location_description = db.Column(db.String)
-    local_timezone = db.Column(db.String, nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
-    updated_at = db.Column(db.DateTime(timezone=True), nullable=False)
-    deleted_at = db.Column(db.DateTime(timezone=True))
+    query = text('select is_admin from users where user_id = :user_id')
+    df = pd.read_sql(query, db.session.bind, params={'user_id': user_id})
 
-    def __init__(
-            self
-            , location_id
-            , location_name
-            , street_address
-            , city
-            , state_code
-            , zip_code
-            , location_description
-            , local_timezone
-            , managed_by_user_id
-            , location_latitude
-            , location_longitude
-        ):
-
-        self.location_id = location_id
-        self.location_name = location_name
-        self.street_address = street_address
-        self.city = city
-        self.state_code = state_code
-        self.zip_code = zip_code
-        self.location_description = location_description
-        self.local_timezone = local_timezone
-        self.managed_by_user_id = managed_by_user_id
-        self.location_latitude = location_latitude
-        self.location_longitude = location_longitude
-
-        # Defaults when record created
-        utc_now = utilities.now_utc()
-        self.created_at = utc_now
-        self.updated_at = utc_now
-        self.deleted_at = None
+    return df['is_admin'].values[0]
 
 
 
@@ -98,13 +45,14 @@ class ObservationSession(db.Model):
 
     __tablename__ = 'sessions'
     session_id = db.Column(UUID(as_uuid=True), primary_key=True)
-    location_id = db.Column(UUID(as_uuid=True), db.ForeignKey('locations.location_id'), nullable=False)
     session_mode = db.Column(db.String(20))
     speed_limit_value = db.Column(db.Float)
     speed_units = db.Column(db.String, nullable=False)
     distance_meters = db.Column(db.Float, nullable=False)
     distance_value = db.Column(db.Float, nullable=False)
     distance_units = db.Column(db.String, nullable=False)
+    session_latitude = db.Column(db.Float)
+    session_longitude = db.Column(db.Float)
     session_description = db.Column(db.String)
     publish = db.Column(db.Boolean, nullable=False)
     local_timezone = db.Column(db.String, nullable=False)
@@ -115,26 +63,28 @@ class ObservationSession(db.Model):
     def __init__(
             self
             , session_id
-            , location_id
             , session_mode
             , local_timezone
             , distance_value
             , distance_units
             , speed_units
             , publish
+            # , session_latitude
+            # , session_longitude
             , speed_limit_value=None
             , distance_meters=None
             , session_description=None
         ):
 
         self.session_id = session_id
-        self.location_id = location_id
         self.session_mode = session_mode
         self.speed_limit_value = speed_limit_value
+        self.speed_units = speed_units
         self.distance_meters = distance_meters
         self.distance_value = distance_value
         self.distance_units = distance_units
-        self.speed_units = speed_units
+        # self.session_latitude = session_latitude
+        # self.session_longitude = session_longitude
         self.session_description = session_description
         self.local_timezone = local_timezone
         self.publish = publish
@@ -147,15 +97,14 @@ class ObservationSession(db.Model):
 
 
 
-class Observation(db.Model):
+class SpeedObservation(db.Model):
     """
     Record the start and stop time of each vehicle
     """
 
-    __tablename__ = 'observations'
+    __tablename__ = 'speed_observations'
     observation_id = db.Column(UUID(as_uuid=True), primary_key=True)
     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
-    # location_id = db.Column(UUID(as_uuid=True), db.ForeignKey('locations.location_id'), nullable=False)
     observation_valid = db.Column(db.Boolean, nullable=False)
     elapsed_seconds = db.Column(db.Float)
     observation_description = db.Column(db.String)
@@ -271,7 +220,6 @@ class CounterObservation(db.Model):
     __tablename__ = 'counter_observations'
     counter_id = db.Column(UUID(as_uuid=True), primary_key=True)
     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('sessions.session_id'), nullable=False)
-    location_id = db.Column(UUID(as_uuid=True), db.ForeignKey('locations.location_id'), nullable=False)
     emoji_id = db.Column(db.Integer, db.ForeignKey('emoji.emoji_id'), nullable=False)
     observation_valid = db.Column(db.Boolean, nullable=False)
     local_timezone = db.Column(db.String, nullable=False)
@@ -282,14 +230,12 @@ class CounterObservation(db.Model):
             self
             , counter_id
             , session_id
-            , location_id
             , emoji_id
             , local_timezone
             ):
 
         self.counter_id = counter_id
         self.session_id = session_id
-        self.location_id = location_id
         self.emoji_id = emoji_id
         self.local_timezone = local_timezone
 

@@ -4,7 +4,7 @@ o.elapsed_seconds
 , s.distance_meters
 , s.speed_units
 
-from observations o
+from speed_observations o
 inner join sessions s using (session_id)
 
 where s.session_id = :session_id

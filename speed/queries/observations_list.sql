@@ -8,12 +8,10 @@ o.observation_id
 , s.distance_meters
 , s.speed_limit_value
 , s.speed_units
-, loc.location_id
 , o.local_timezone
 
-from observations o
+from speed_observations o
 inner join sessions s using (session_id)
-inner join locations loc using (location_id)
 
 where s.session_id = :session_id
 

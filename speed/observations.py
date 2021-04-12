@@ -47,7 +47,6 @@ def one_observation(observation_id):
         'observation.html'
         , observation_id=observation_id
         , session_id=this_obs_series['session_id']
-        , location_id=this_obs_series['location_id']
         , start_date_local=this_obs_series['start_date_local']
         , start_time_local=this_obs_series['start_time_local']
         , distance_value=this_obs_series['distance_value']

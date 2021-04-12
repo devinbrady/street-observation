@@ -88,8 +88,6 @@ def counter_handler():
         , emoji_count=emoji_count
         , emoji_observations=emoji_observations
         , session_id=session_id
-        , location_id=this_session['location_id']
-        , location_name=this_session['location_name']
         , session_duration_string=session_duration_string
         , session_date=session_date
         )
@@ -104,15 +102,13 @@ def emoji_post():
     """
 
     session_id = request.args.get('session_id')
-    location_id = request.args.get('location_id')
     emoji_id = request.args.get('emoji_id')
 
-    local_timezone = models.get_location_timezone(location_id)
+    local_timezone = models.get_session_timezone(session_id)
     
     new_counter_observation = models.CounterObservation(
         counter_id=models.generate_uuid()
         , session_id=session_id
-        , location_id=location_id
         , emoji_id=int(emoji_id)
         , local_timezone=local_timezone
         )
@@ -133,7 +129,6 @@ def emoji_validity():
     Handle the request to change the validity of an emoji observation
     """
 
-    location_id = request.args.get('location_id')
     session_id = request.args.get('session_id')
     counter_id = request.args.get('counter_id')
     valid_action = request.args.get('valid_action')

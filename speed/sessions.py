@@ -29,21 +29,9 @@ def edit_session_settings():
     Receive information about each session
     """
 
-    session_id = request.args.get('session_id')
-    location_id = request.args.get('location_id')
-
-    if not session_id:
-        session_id = 'new_session'
-
+    session_id = request.args.get('session_id', 'new_session')
 
     if session_id == 'new_session':
-
-        if not location_id:
-            print('The location_id must be specified to start a new session')
-            abort(404)
-
-        this_location = utilities.one_location(location_id)
-        location_name = this_location['location_name']
 
         form_settings = SessionSettingsForm(
             speed_limit_value=20
@@ -60,11 +48,8 @@ def edit_session_settings():
 
             distance_meters = utilities.convert_distance_to_meters(form_settings.distance_value.data, form_settings.distance_units.data)
 
-            local_timezone = models.get_location_timezone(location_id)
-
             new_session_object = models.ObservationSession(
                 session_id=session_id
-                , location_id=location_id
                 , session_mode=form_settings.session_mode.data
                 , speed_limit_value=form_settings.speed_limit_value.data
                 , speed_units=form_settings.speed_units.data
@@ -72,7 +57,7 @@ def edit_session_settings():
                 , distance_value=form_settings.distance_value.data
                 , distance_units=form_settings.distance_units.data
                 , session_description=form_settings.session_description.data
-                , local_timezone=local_timezone
+                , local_timezone=form_settings.local_timezone.data
                 , publish=form_settings.publish.data
                 )
             db.session.add(new_session_object)
@@ -87,8 +72,6 @@ def edit_session_settings():
         # Existing session
 
         this_session = utilities.one_session(session_id)
-        location_id = this_session['location_id']
-        location_name = this_session['location_name']
 
         allow_session_view, allow_data_entry, allow_session_edit = utilities.session_permissions(this_session)
 
@@ -134,8 +117,6 @@ def edit_session_settings():
     return render_template(
         'session_settings.html'
         , form_settings=form_settings
-        , location_id=location_id
-        , location_name=location_name
         , session_id=session_id
         )
 
@@ -171,7 +152,6 @@ def broadcast_start(message):
     A new observation has been initiated
     """
     session_id = message['session_id']
-    # location_id = message['location_id']
 
     # join_room(session_id)
 
@@ -179,7 +159,7 @@ def broadcast_start(message):
 
     active_observation_id = models.generate_uuid()
     session_timezone = models.get_session_timezone(session_id)
-    obs = models.Observation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time, local_timezone=session_timezone)
+    obs = models.SpeedObservation(observation_id=active_observation_id, session_id=session_id, start_time=utc_time, local_timezone=session_timezone)
 
     db.session.add(obs)
     db.session.commit()
@@ -208,15 +188,15 @@ def broadcast_end(message):
 
     utc_time = utilities.now_utc()
 
-    this_obs = db.session.query(models.Observation).filter(models.Observation.observation_id == active_observation_id)
+    this_obs = db.session.query(models.SpeedObservation).filter(models.SpeedObservation.observation_id == active_observation_id)
     
     # Calculate time
     elapsed_td = utc_time - this_obs.scalar().start_time
     elapsed_seconds = elapsed_td.total_seconds()
     
     this_obs.update({
-        models.Observation.end_time: utc_time
-        , models.Observation.elapsed_seconds: elapsed_seconds
+        models.SpeedObservation.end_time: utc_time
+        , models.SpeedObservation.elapsed_seconds: elapsed_seconds
         })
     db.session.commit()
 
@@ -305,12 +285,10 @@ def session_handler():
             most_recent_speed = valid_observations['speed_value'].iloc[0]
         
 
-
     return render_template(
         'session.html'
         , session_id=session_id
-        , location_id=this_session['location_id']
-        , location_name=this_session['location_name']
+        , this_session=this_session
         , allow_data_entry=allow_data_entry
         , allow_session_edit=allow_session_edit
         , vehicle_count=vehicle_count

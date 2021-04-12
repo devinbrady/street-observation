@@ -4,7 +4,6 @@
   <thead>
   <tr>
     <th scope="col">Date and Time</th>
-    <th scope="col">Location Name</th>
     <th scope="col">Observations</th>
     <th scope="col">Result</th>
     <!-- <th scope="col">Published</th> -->
@@ -19,7 +18,6 @@
     {% elif row.session_mode == 'counter' %}
       <td><a href="/counter?session_id={{ row.session_id }}">{{ row.created_at_local }}</a></td>
     {% endif %}
-    <td><a href="/location?location_id={{ row.location_id }}">{{ row.location_name }}</a></td>
     <td>{{ '%0.0f'|format(row.num_observations|float) }}</td>
     <td>{{ row.result }} </td>
     <!-- <td>{{ row.publish }} </td> -->

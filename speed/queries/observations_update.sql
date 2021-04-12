@@ -1,5 +1,5 @@
 
-update observations
+update speed_observations
 
 set
     observation_valid = :valid_action

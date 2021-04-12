@@ -11,7 +11,7 @@ s.session_id::varchar
 , o.start_time
 , o.local_timezone
 
-from observations o
+from speed_observations o
 inner join sessions s using (session_id)
 
 where o.observation_valid

@@ -62,7 +62,7 @@ def register():
     Create a new user
     """
 
-    if current_user.username != 'admin':
+    if not current_user.is_admin:
         return app.login_manager.unauthorized()
 
     form = RegistrationForm(local_timezone='America/New_York')

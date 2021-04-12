@@ -2,7 +2,6 @@
 
 select
 s.session_id::varchar
-, s.location_id::varchar
 , s.session_mode
 , s.distance_meters
 , s.distance_value
@@ -13,9 +12,7 @@ s.session_id::varchar
 , s.publish
 , s.local_timezone
 , s.created_at
-, loc.location_name
 
 from sessions s
-inner join locations loc using (location_id)
 
 where s.session_id = :session_id

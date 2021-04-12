@@ -23,11 +23,10 @@
             <div><a href="/login">Login</a></div>
         {% endif %}
 
-        {% if current_user.username == 'admin' %}
+        {% if current_user.is_admin %}
             <div><a href="/register">Register a New User (Admin Only)</a></div>
         {% endif %}
 
-        <div><a href='/location_list'>Locations</a></div>
         <div><a href='/session_list'>Sessions</a></div>
         <div><a href='/about'>About this site</a></div>
         <div><a href="/">Home</a></div>

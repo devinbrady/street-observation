@@ -13,7 +13,7 @@
         <div class="col p-3">
 
           {% if allow_data_entry %}
-            <form action="/emoji?session_id={{ session_id }}&location_id={{ location_id }}&emoji_id={{ row.emoji_id }}" method="POST">
+            <form action="/emoji?session_id={{ session_id }}&emoji_id={{ row.emoji_id }}" method="POST">
                 <div class="d-grid">
                     <button type="submit" class="btn btn-outline-primary" style="font-size:50px">
                         &#{{ row.emoji_id }} {{ row.num_observations }}
@@ -36,10 +36,8 @@
 </div>
 
 {% if allow_session_edit %}
-  <p><a href='/session_settings?session_id={{ session_id }}&location_id={{ location_id }}'>Edit session</a></p>
+  <p><a href='/session_settings?session_id={{ session_id }}'>Edit session</a></p>
 {% endif %}
-
-<p>Location: <a href="/location?location_id={{ location_id }}">{{ location_name }}</a></p>
 
 <p>Session duration: {{ session_duration_string }}</p>
 
@@ -89,11 +87,11 @@
 
     <td>
         {% if obs.observation_valid %}
-        <form action="/emoji_validity?session_id={{ session_id }}&location_id={{ location_id }}&counter_id={{ obs.counter_id }}&valid_action=False" method="POST">
+        <form action="/emoji_validity?session_id={{ session_id }}&counter_id={{ obs.counter_id }}&valid_action=False" method="POST">
           <button type="submit" class="btn btn-primary">Valid</button>
         </form>
         {% else %}
-        <form action="/emoji_validity?session_id={{ session_id }}&location_id={{ location_id }}&counter_id={{ obs.counter_id }}&valid_action=True" method="POST">
+        <form action="/emoji_validity?session_id={{ session_id }}&counter_id={{ obs.counter_id }}&valid_action=True" method="POST">
           <button type="submit" class="btn btn-outline-primary">Invalid</button>
         </form>
         {% endif %}
