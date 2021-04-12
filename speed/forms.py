@@ -143,14 +143,15 @@ class LocationSettingsForm(FlaskForm):
         , render_kw={'class': 'form-control'}
     )
 
-
     location_latitude = DecimalField(
         'Latitude'
+        , places=6
         , render_kw={'class': 'form-control', 'id': 'lat'}
         )
 
     location_longitude = DecimalField(
         'Longitude'
+        , places=6
         , render_kw={'class': 'form-control', 'id': 'lon'}
         )
 
@@ -158,4 +159,38 @@ class LocationSettingsForm(FlaskForm):
     # delete
 
     submit = SubmitField('Submit', render_kw={'class': 'btn btn-primary'})
+
+
+
+class DistanceForm(FlaskForm):
+    """
+    Form to collect information about the distance between two users
+    """
+
+
+    user_a_latitude = DecimalField(
+        'User A Latitude'
+        , places=6
+        , render_kw={'class': 'form-control', 'id': 'user_a_lat'}
+        )
+
+    user_a_longitude = DecimalField(
+        'User A Longitude'
+        , places=6
+        , render_kw={'class': 'form-control', 'id': 'user_a_lon'}
+        )
+
+    user_b_latitude = DecimalField(
+        'User B Latitude'
+        , places=6
+        , render_kw={'class': 'form-control', 'id': 'user_b_lat'}
+        )
+
+    user_b_longitude = DecimalField(
+        'User B Longitude'
+        , places=6
+        , render_kw={'class': 'form-control', 'id': 'user_b_lon'}
+        )
+
+    submit = SubmitField('Calculate Distance', render_kw={'class': 'btn btn-primary'})
 

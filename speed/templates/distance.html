@@ -1,0 +1,102 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Distance{% endblock %}
+
+{% block head %}
+  {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+
+<script>
+$(document).ready(function(){
+    var socket = io();
+
+    var user_a_coordinate_output = document.getElementById("user_a_coordinate_output");
+    var user_b_coordinate_output = document.getElementById("user_b_coordinate_output");
+
+    var user_a_latitude = 0
+    var user_a_longitude = 0
+    var user_b_latitude = 0
+    var user_b_longitude = 0
+
+
+    var options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+    };
+
+    function success_user_a(pos) {
+        var crd = pos.coords;
+
+        user_a_latitude = crd.latitude
+        user_a_longitude = crd.longitude
+        socket.emit('geolocation reported', {'user_a_latitude': user_a_latitude, 'user_a_longitude': user_a_longitude, 'user_b_latitude': user_b_latitude, 'user_b_longitude': user_b_longitude});
+    }
+
+    function success_user_b(pos) {
+        var crd = pos.coords;
+
+        user_b_latitude = crd.latitude
+        user_b_longitude = crd.longitude
+        socket.emit('geolocation reported', {'user_a_latitude': user_a_latitude, 'user_a_longitude': user_a_longitude, 'user_b_latitude': user_b_latitude, 'user_b_longitude': user_b_longitude});
+    }
+
+    function error(err) {
+        user_a_coordinate_output.innerHTML += `<br>Error (${err.code}): ${err.message}`
+    }
+
+
+    $('.geolocation_button_user_a').click(function() {
+        if (navigator.geolocation) {
+            window.console&&console.log("Determining your device's location, please wait... ");
+            navigator.geolocation.getCurrentPosition(success_user_a, error, options);
+        } else {
+            window.console&&console.log("Geolocation is not supported by this browser.");
+        }
+    });
+
+    $('.geolocation_button_user_b').click(function() {
+        if (navigator.geolocation) {
+            window.console&&console.log("Determining your device's location, please wait... ");
+            navigator.geolocation.getCurrentPosition(success_user_b, error, options);
+        } else {
+            window.console&&console.log("Geolocation is not supported by this browser.");
+        }
+    });
+
+
+    socket.on('info update', function(msg) {
+        user_a_latitude = msg['user_a_latitude'];
+        user_a_longitude = msg['user_a_longitude'];
+        user_b_latitude = msg['user_b_latitude'];
+        user_b_longitude = msg['user_b_longitude'];
+        distance_meters = msg['distance_meters'];
+
+        user_a_coordinate_output.innerHTML = `Lat: ${user_a_latitude} Lon: ${user_a_longitude}`
+        user_b_coordinate_output.innerHTML = `Lat: ${user_b_latitude} Lon: ${user_b_longitude}`
+        document.getElementById("distance_output").innerHTML = `${distance_meters} meters`
+
+    });
+
+});
+</script>
+
+
+<h4>Coordinates</h4>
+
+<div class="geolocation_button_user_a btn btn-secondary">User A: find my current location</div>
+<p id="user_a_coordinate_output"></p>
+<div class="geolocation_button_user_b btn btn-secondary">User B: find my current location</div>
+<p id="user_b_coordinate_output"></p>
+<p id="distance_output"></p>
+
+
+
+
+
+{% endblock %}

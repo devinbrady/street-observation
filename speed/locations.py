@@ -69,6 +69,8 @@ def edit_location_settings():
             , state_code=locations['state_code']
             , zip_code=locations['zip_code']
             , location_description=locations['location_description']
+            , location_latitude=locations['location_latitude']
+            , location_longitude=locations['location_longitude']
             )
 
         if form.validate_on_submit():

@@ -1,0 +1,46 @@
+
+
+
+{% extends "base.html" %}
+{% block title %}Locate Me{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+
+<p>Click the button to get your coordinates.</p>
+
+<button onclick="getLocation('cool')">Try It</button>
+
+<p id="demo"></p>
+
+<script>
+
+function getLocation(prefix) {
+
+    var x = document.getElementById("demo");
+
+    var options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+    };
+
+    function success(pos) {
+        var crd = pos.coords;
+        x.innerHTML += `<br>Latitude: ${crd.latitude} Longitude: ${crd.longitude} More or less ${crd.accuracy} meters.`
+    }
+
+    function error(err) {
+        x.innerHTML += `<br>Error (${err.code}): ${err.message}`
+    }
+
+    x.innerHTML = `Determining your device's location, please wait... ${prefix}`
+    navigator.geolocation.getCurrentPosition(success, error, options);
+}
+
+</script>
+
+{% endblock %}
+
+

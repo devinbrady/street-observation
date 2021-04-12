@@ -8,11 +8,22 @@ from sqlalchemy import text, bindparam
 from decimal import Decimal
 from dateutil import tz
 from datetime import datetime, timezone
+from geopy.distance import lonlat, distance
+
 from flask import current_app as app
 from flask_login import current_user
 
 from . import db
 from . import models
+
+
+
+def compute_distance(lat_a, lon_a, lat_b, lon_b):
+    """
+    Return float with distance between two points in meters
+    """
+
+    return distance((lat_a, lon_a), (lat_b, lon_b)).meters
 
 
 
@@ -119,28 +130,32 @@ def session_list_dataframe_for_display(location_id=None):
                     , params={'speed_timer_sessions': speed_timer_sessions}
                     )
 
-            timer_obs['speed_value'] = timer_obs.apply(
-                lambda row: convert_to_speed_units(
-                    row.distance_meters
-                    , row.elapsed_seconds
-                    , row.speed_units
-                    )
-                , axis=1
-            )
+            if len(timer_obs) == 0:
+                timer_sessions = pd.DataFrame(columns=columns_to_union)
+            else:
+                # todo: this is to cover for a bug, not sure why it's happening, should eventually be removed
+                timer_obs['speed_value'] = timer_obs.apply(
+                    lambda row: convert_to_speed_units(
+                        row.distance_meters
+                        , row.elapsed_seconds
+                        , row.speed_units
+                        )
+                    , axis=1
+                )
 
-            timer_sessions = timer_obs.groupby('session_id').agg(
-                start_timestamp_min=('start_time', 'min')
-                , start_timestamp_max=('start_time', 'max')
-                , local_timezone=('local_timezone', 'first')
-                , speed_units=('speed_units', 'first')
-                , median_speed=('speed_value', 'median')
-                , num_observations=('observation_id', 'count')
-            ).reset_index()
+                timer_sessions = timer_obs.groupby('session_id').agg(
+                    start_timestamp_min=('start_time', 'min')
+                    , start_timestamp_max=('start_time', 'max')
+                    , local_timezone=('local_timezone', 'first')
+                    , speed_units=('speed_units', 'first')
+                    , median_speed=('speed_value', 'median')
+                    , num_observations=('observation_id', 'count')
+                ).reset_index()
 
-            timer_sessions['speed_units_short'] = timer_sessions['speed_units'].map(abbreviate_speed_units())
-            timer_sessions['result'] = timer_sessions.apply(
-                lambda row: f"Median speed: {row['median_speed']:.1f} {row['speed_units_short']}"
-                , axis=1)
+                timer_sessions['speed_units_short'] = timer_sessions['speed_units'].map(abbreviate_speed_units())
+                timer_sessions['result'] = timer_sessions.apply(
+                    lambda row: f"Median speed: {row['median_speed']:.1f} {row['speed_units_short']}"
+                    , axis=1)
 
 
         # Calculate stats about the speed timer sessions on this list
@@ -290,6 +305,31 @@ def convert_distance_to_meters(value, unit):
 
     elif unit == 'kilometers':
         return value * Decimal(1000)
+
+    else:
+        print(f'Unknown units: {unit}')
+        abort(500)
+
+
+
+def convert_meters_to_display_value(distance_meters, unit):
+    """
+    Return a distance value for display
+    """
+
+    distance_meters_dec = Decimal(distance_meters)
+
+    if unit == 'feet':
+        return distance_meters_dec / Decimal(0.3048)
+
+    elif unit == 'miles':
+        return distance_meters_dec / Decimal(1609.34)
+
+    elif unit == 'meters':
+        return distance_meters_dec
+
+    elif unit == 'kilometers':
+        return distance_meters_dec / Decimal(1000)
 
     else:
         print(f'Unknown units: {unit}')

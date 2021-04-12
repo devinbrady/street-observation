@@ -30,6 +30,7 @@ def create_app(test_config=None):
         from . import sessions
         from . import counter
         from . import locations
+        from . import distance
         
         db.create_all()
 

@@ -7,7 +7,7 @@ from flask_login import login_required, current_user, login_user, logout_user
 
 from . import login_manager, db
 from . import models
-from .forms import LoginForm, RegistrationForm
+from .forms import LoginForm, RegistrationForm, DistanceForm
 
 
 @app.errorhandler(404)
@@ -92,3 +92,5 @@ def unauthorized():
 def logout():
     logout_user()
     return redirect('/')
+
+

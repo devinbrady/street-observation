@@ -45,7 +45,7 @@ def edit_session_settings():
         this_location = utilities.one_location(location_id)
         location_name = this_location['location_name']
 
-        form = SessionSettingsForm(
+        form_settings = SessionSettingsForm(
             speed_limit_value=20
             , speed_units='miles per hour'
             , distance_value=100
@@ -54,33 +54,33 @@ def edit_session_settings():
             , publish=False
             )
     
-        if form.validate_on_submit():
+        if form_settings.validate_on_submit():
 
             session_id = models.generate_uuid()
 
-            distance_meters = utilities.convert_distance_to_meters(form.distance_value.data, form.distance_units.data)
+            distance_meters = utilities.convert_distance_to_meters(form_settings.distance_value.data, form_settings.distance_units.data)
 
             local_timezone = models.get_location_timezone(location_id)
 
             new_session_object = models.ObservationSession(
                 session_id=session_id
                 , location_id=location_id
-                , session_mode=form.session_mode.data
-                , speed_limit_value=form.speed_limit_value.data
-                , speed_units=form.speed_units.data
+                , session_mode=form_settings.session_mode.data
+                , speed_limit_value=form_settings.speed_limit_value.data
+                , speed_units=form_settings.speed_units.data
                 , distance_meters=distance_meters
-                , distance_value=form.distance_value.data
-                , distance_units=form.distance_units.data
-                , session_description=form.session_description.data
+                , distance_value=form_settings.distance_value.data
+                , distance_units=form_settings.distance_units.data
+                , session_description=form_settings.session_description.data
                 , local_timezone=local_timezone
-                , publish=form.publish.data
+                , publish=form_settings.publish.data
                 )
             db.session.add(new_session_object)
             db.session.commit()
 
-            if form.session_mode.data == 'speed timer':
+            if form_settings.session_mode.data == 'speed timer':
                 return redirect(f'session?session_id={session_id}')
-            elif form.session_mode.data == 'counter':
+            elif form_settings.session_mode.data == 'counter':
                 return redirect(f'counter?session_id={session_id}')
 
     else:
@@ -95,7 +95,7 @@ def edit_session_settings():
         if not allow_session_edit:
             return app.login_manager.unauthorized()
 
-        form = SessionSettingsForm(
+        form_settings = SessionSettingsForm(
             speed_limit_value=this_session['speed_limit_value']
             , speed_units=this_session['speed_units']
             , distance_value=this_session['distance_value']
@@ -105,33 +105,35 @@ def edit_session_settings():
             , publish=this_session['publish']
             )
 
-        if form.validate_on_submit():
 
-            distance_meters = utilities.convert_distance_to_meters(form.distance_value.data, form.distance_units.data)
+        if form_settings.validate_on_submit():
+
+            distance_meters = utilities.convert_distance_to_meters(form_settings.distance_value.data, form_settings.distance_units.data)
+            distance_value = form_settings.distance_value.data
 
             with open(os.path.join(app.root_path, 'queries/sessions_update.sql'), 'r') as f:
                 result = db.engine.execute(
                     text(f.read())
                     , session_id=session_id
                     , distance_meters=distance_meters
-                    , distance_value=form.distance_value.data
-                    , distance_units=form.distance_units.data
-                    , speed_limit_value=form.speed_limit_value.data
-                    , speed_units=form.speed_units.data
-                    , session_description=form.session_description.data
-                    , publish=form.publish.data
+                    , distance_value=distance_value
+                    , distance_units=form_settings.distance_units.data
+                    , speed_limit_value=form_settings.speed_limit_value.data
+                    , speed_units=form_settings.speed_units.data
+                    , session_description=form_settings.session_description.data
+                    , publish=form_settings.publish.data
                     , updated_at=utilities.now_utc()
                     )
 
-            if form.session_mode.data == 'speed timer':
+            if form_settings.session_mode.data == 'speed timer':
                 return redirect(f'session?session_id={session_id}')
-            elif form.session_mode.data == 'counter':
+            elif form_settings.session_mode.data == 'counter':
                 return redirect(f'counter?session_id={session_id}')
 
     
     return render_template(
         'session_settings.html'
-        , form=form
+        , form_settings=form_settings
         , location_id=location_id
         , location_name=location_name
         , session_id=session_id

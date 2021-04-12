@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+{% block title %}Session Settings{% endblock %}
 
 {% block content %}
 
@@ -10,15 +11,15 @@
 
 
     <form method="POST" action="/session_settings?session_id={{ session_id if session_id else 'new_session' }}&location_id={{ location_id }}">
-      {{ form.csrf_token }}
+      {{ form_settings.csrf_token }}
 
 
       <div class="form-check">
-      {{ form.session_mode.label }}
-      {{ form.session_mode }}
-        {% if form.session_mode.errors %}
+      {{ form_settings.session_mode.label }}
+      {{ form_settings.session_mode }}
+        {% if form_settings.session_mode.errors %}
         <ul class="errors">
-          {% for error in form.session_mode.errors %}
+          {% for error in form_settings.session_mode.errors %}
             <li>{{ error }}</li>
           {% endfor %}
         </ul>
@@ -26,11 +27,11 @@
       </div>
 
       <div class="form-group">
-        {{ form.speed_limit_value.label }}
-        {{ form.speed_limit_value }}
-        {% if form.speed_limit_value.errors %}
+        {{ form_settings.distance_value.label }}
+        {{ form_settings.distance_value }}
+        {% if form_settings.distance_value.errors %}
           <ul class="errors">
-            {% for error in form.speed_limit_value.errors %}
+            {% for error in form_settings.distance_value.errors %}
               <li>{{ error }}</li>
             {% endfor %}
           </ul>
@@ -38,11 +39,11 @@
       </div>
 
       <div class="form-group">
-        {{ form.speed_units.label }}
-        {{ form.speed_units }}
-        {% if form.speed_units.errors %}
+        {{ form_settings.distance_units.label }}
+        {{ form_settings.distance_units }}
+        {% if form_settings.distance_units.errors %}
           <ul class="errors">
-            {% for error in form.speed_units.errors %}
+            {% for error in form_settings.distance_units.errors %}
               <li>{{ error }}</li>
             {% endfor %}
           </ul>
@@ -50,11 +51,11 @@
       </div>
 
       <div class="form-group">
-        {{ form.distance_value.label }}
-        {{ form.distance_value }}
-        {% if form.distance_value.errors %}
+        {{ form_settings.speed_limit_value.label }}
+        {{ form_settings.speed_limit_value }}
+        {% if form_settings.speed_limit_value.errors %}
           <ul class="errors">
-            {% for error in form.distance_value.errors %}
+            {% for error in form_settings.speed_limit_value.errors %}
               <li>{{ error }}</li>
             {% endfor %}
           </ul>
@@ -62,11 +63,11 @@
       </div>
 
       <div class="form-group">
-        {{ form.distance_units.label }}
-        {{ form.distance_units }}
-        {% if form.distance_units.errors %}
+        {{ form_settings.speed_units.label }}
+        {{ form_settings.speed_units }}
+        {% if form_settings.speed_units.errors %}
           <ul class="errors">
-            {% for error in form.distance_units.errors %}
+            {% for error in form_settings.speed_units.errors %}
               <li>{{ error }}</li>
             {% endfor %}
           </ul>
@@ -74,11 +75,11 @@
       </div>
 
       <div class="form-group">
-        {{ form.session_description.label }}
-        {{ form.session_description }}
-        {% if form.session_description.errors %}
+        {{ form_settings.session_description.label }}
+        {{ form_settings.session_description }}
+        {% if form_settings.session_description.errors %}
           <ul class="errors">
-            {% for error in form.session_description.errors %}
+            {% for error in form_settings.session_description.errors %}
               <li>{{ error }}</li>
             {% endfor %}
           </ul>
@@ -86,26 +87,66 @@
       </div>
 
       <div class="form-group">
-        {{ form.publish.label }}
-        {{ form.publish }}
-        {% if form.publish.errors %}
+        {{ form_settings.publish.label }}
+        {{ form_settings.publish }}
+        {% if form_settings.publish.errors %}
           <ul class="errors">
-            {% for error in form.publish.errors %}
+            {% for error in form_settings.publish.errors %}
               <li>{{ error }}</li>
             {% endfor %}
           </ul>
         {% endif %}
 
-        <p class="help-block">{{ form.publish.description|safe }}</p>
+        <p class="help-block">{{ form_settings.publish.description|safe }}</p>
 
       </div>
 
-      {{ form.submit }}
-
-      <!-- todo: add a Cancel button here -->
+      {{ form_settings.submit }}
 
       </form>
+
   </div>
+
+
+<script>
+
+
+function getLocation(prefix) {
+
+    var x = document.getElementById(prefix + "_coordinate_output");
+    var lat = document.getElementById(prefix + "_lat");
+    var lon = document.getElementById(prefix + "_lon");
+
+    var options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+    };
+
+    function success(pos) {
+        var crd = pos.coords;
+        x.innerHTML += `success!`
+
+        lat.value = crd.latitude;
+        lon.value = crd.longitude;
+    }
+
+    function error(err) {
+        x.innerHTML += `<br>Error (${err.code}): ${err.message}`
+    }
+
+    if (navigator.geolocation) {
+        x.innerHTML = `Determining your device's location, please wait... `
+        navigator.geolocation.getCurrentPosition(success, error, options);
+    } else {
+        x.innerHTML = "Geolocation is not supported by this browser.";
+    }
+
+
+}
+
+
+</script>
 
 
 {% endblock %}
