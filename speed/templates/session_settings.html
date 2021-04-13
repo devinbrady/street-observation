@@ -14,7 +14,13 @@
       {{ form_settings.csrf_token }}
 
       <dl>
-        {{ render_field(form_settings.session_mode) }}
+        {% if request.args.get('session_id') == 'new_session' %}
+          {{ render_field(form_settings.session_mode) }}
+        {% else %}
+          <div>Session Mode: {{ form_settings.session_mode.data }}</div>
+        {% endif %}
+
+        {{ render_field(form_settings.geolocate_observers) }}
         {{ render_field(form_settings.distance_value) }}
         {{ render_field(form_settings.distance_units) }}
         {{ render_field(form_settings.speed_limit_value) }}

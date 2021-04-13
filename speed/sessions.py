@@ -64,7 +64,11 @@ def edit_session_settings():
             db.session.commit()
 
             if form_settings.session_mode.data == 'speed timer':
-                return redirect(f'session?session_id={session_id}')
+                if form_settings.geolocate_observers.data:
+                    return redirect(f'session?session_id={session_id}&geolocate_observers=1')
+                else:
+                    return redirect(f'session?session_id={session_id}')
+
             elif form_settings.session_mode.data == 'counter':
                 return redirect(f'counter?session_id={session_id}')
 
@@ -109,7 +113,10 @@ def edit_session_settings():
                     )
 
             if form_settings.session_mode.data == 'speed timer':
-                return redirect(f'session?session_id={session_id}')
+                if form_settings.geolocate_observers.data:
+                    return redirect(f'session?session_id={session_id}&geolocate_observers=1')
+                else:
+                    return redirect(f'session?session_id={session_id}')
             elif form_settings.session_mode.data == 'counter':
                 return redirect(f'counter?session_id={session_id}')
 
@@ -212,6 +219,8 @@ def broadcast_end(message):
 def session_handler():
 
     session_id = request.args.get('session_id')
+    geolocate_observers_str = request.args.get('geolocate_observers')
+    geolocate_observers = geolocate_observers_str == '1'
 
     # A session_id needs to be provided to view this page
     if not session_id:
@@ -295,13 +304,11 @@ def session_handler():
         , max_speed=max_speed
         , median_speed=median_speed
         , most_recent_speed=most_recent_speed
-        , speed_limit_value=this_session['speed_limit_value']
         , speed_units_short=utilities.abbreviate_speed_units()[this_session['speed_units']]
-        , distance_value=this_session['distance_value']
-        , distance_units=this_session['distance_units']
         , qr=plot_qr_code()
         , this_url=request.url
         , completed_observations=completed_observations
+        , geolocate_observers=geolocate_observers
         )
 
 

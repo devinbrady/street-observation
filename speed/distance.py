@@ -3,7 +3,9 @@ from flask import current_app as app
 from flask import render_template
 from geopy.distance import lonlat, distance
 from flask_socketio import emit
-
+import pandas as pd
+from sqlalchemy import text
+import os
 
 from . import db, socketio
 from . import models
@@ -78,19 +80,23 @@ def geolocation_reported(message):
 
 
 
-# @app.route('/distance', methods=['POST'])
-# def post_distance():
+@socketio.on('use distance')
+def geolocation_reported(message):
 
-#     print('hi')
+    this_session = utilities.one_session(message['session_id'])
 
-#     form = DistanceForm()
-#     if form.validate_on_submit():
-#         print(form)
+    distance_value = utilities.convert_meters_to_display_value(
+        message['distance_meters']
+        , this_session['distance_units']
+        )
 
-#     return render_template('distance.html', form=form)
+    with open(os.path.join(app.root_path, 'queries/sessions_update_distance.sql'), 'r') as f:
+        result = db.engine.execute(
+            text(f.read())
+            , session_id=message['session_id']
+            , distance_meters=message['distance_meters']
+            , distance_value=distance_value
+            , updated_at=utilities.now_utc()
+            )
 
-
-@app.route('/locate_me', methods=['GET'])
-def locate_me():
     
-    return render_template('locate_me_2.html')

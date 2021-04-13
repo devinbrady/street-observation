@@ -14,7 +14,7 @@
     <li>Description: {{ this_session['session_description'] }}</li>
     <li>Distance: {{ '{:0.1f}'.format(this_session['distance_value']) }} {{ this_session['distance_units'] }}</li>
     <li>Vehicle Count: {{ vehicle_count }}</li>
-    <li>Speed Limit: {{ '{:0.0f}'.format(speed_limit_value) }} {{ speed_units_short }}</li>
+    <li>Speed Limit: {{ '{:0.0f}'.format(this_session['speed_limit_value']) }} {{ speed_units_short }}</li>
     <li>Max Speed: {{ '{:0.1f}'.format(max_speed) }} {{ speed_units_short }}</li>
     <li>Median Speed: {{ '{:0.1f}'.format(median_speed) }} {{ speed_units_short }}</li>
     <li>Most Recent Speed: {{ '{:0.1f}'.format(most_recent_speed) }} {{ speed_units_short }}</li>
@@ -31,6 +31,8 @@
 
 <script>
 $(document).ready(function(){
+
+    // Timer
     var socket = io();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -94,9 +96,109 @@ $(document).ready(function(){
 
     });
 
+    // Geolocation
+
+    var coordinate_output = document.getElementById("coordinate_output");
+
+    var user_a_latitude = 0;
+    var user_a_longitude = 0;
+    var user_b_latitude = 0;
+    var user_b_longitude = 0;
+    var distance_meters = -1;
+
+    var options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+    };
+
+    function success_user_a(pos) {
+        window.console&&console.log("User A geolocation succeeded");
+        var crd = pos.coords;
+
+        user_a_latitude = crd.latitude
+        user_a_longitude = crd.longitude
+        socket.emit('geolocation reported', {'user_a_latitude': user_a_latitude, 'user_a_longitude': user_a_longitude, 'user_b_latitude': user_b_latitude, 'user_b_longitude': user_b_longitude});
+    };
+
+    function success_user_b(pos) {
+        window.console&&console.log("User B geolocation succeeded");
+        var crd = pos.coords;
+
+        user_b_latitude = crd.latitude
+        user_b_longitude = crd.longitude
+        socket.emit('geolocation reported', {'user_a_latitude': user_a_latitude, 'user_a_longitude': user_a_longitude, 'user_b_latitude': user_b_latitude, 'user_b_longitude': user_b_longitude});
+    };
+
+    function error(err) {
+        coordinate_output.innerHTML += `<br>Error (${err.code}): ${err.message}`
+    };
+
+
+    $('.geolocation_button_user_a').click(function() {
+        var btn = document.getElementById("geolocation_button_user_a")
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+
+        if (navigator.geolocation) {
+            window.console&&console.log("Determining your device location, please wait... ");
+            navigator.geolocation.getCurrentPosition(success_user_a, error, options);
+        } else {
+            window.console&&console.log("Geolocation is not supported by this browser.");
+        }
+    });
+
+    $('.geolocation_button_user_b').click(function() {
+        var btn = document.getElementById("geolocation_button_user_b")
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+      
+        if (navigator.geolocation) {
+            window.console&&console.log("Determining your device location, please wait... ");
+            navigator.geolocation.getCurrentPosition(success_user_b, error, options);
+        } else {
+            window.console&&console.log("Geolocation is not supported by this browser.");
+        }
+    });
+
+    socket.on('info update', function(msg) {
+        user_a_latitude = msg['user_a_latitude'];
+        user_a_longitude = msg['user_a_longitude'];
+        user_b_latitude = msg['user_b_latitude'];
+        user_b_longitude = msg['user_b_longitude'];
+        distance_meters = msg['distance_meters'];
+
+        if (distance_meters > -1) {
+            document.getElementById("use_distance").classList.remove("invisible");
+            document.getElementById("cancel_distance").classList.remove("invisible");
+            document.getElementById("distance_output").innerHTML = `${distance_meters} meters`;
+        } else {
+            window.console&&console.log("Oh well");
+        };
+        
+    });
+
+    $('.use_distance').click(function() {
+      socket.emit('use distance', {'distance_meters': distance_meters, 'session_id': session_id});
+      location.href = 'session?session_id=' + session_id;
+    });
+
 
 });
 </script>
+
+{% if geolocate_observers %}
+  <h2>Coordinates</h2>
+
+  <p id="coordinate_output"></p>
+  <div id="geolocation_button_user_a" class="geolocation_button_user_a btn btn-primary">User A: find location</div>
+  <div id="geolocation_button_user_b" class="geolocation_button_user_b btn btn-primary">User B: find location</div>
+  <p id="distance_output"></p>
+
+  <div id="use_distance" class="use_distance btn btn-primary invisible" value="Use This Distance">Use This Distance</div>
+  <a href='/session_settings?session_id={{ session_id }}'><button id="cancel_distance" class="cancel_distance btn btn-dark invisible" value="Input Distance Manually">Input Distance Manually</button></a>
+{% endif %}
+
 
   <h2>Timer</h2>
   <div style="height: 300px" class="d-grid gap-2 d-md-block">

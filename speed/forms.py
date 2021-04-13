@@ -95,6 +95,12 @@ class SessionSettingsForm(FlaskForm):
         , description='Check this box if you want to publish this observation session for public viewing.'
         )
 
+    geolocate_observers = BooleanField(
+        'Determine Coordinates'
+        , render_kw={'class': 'form-check-input'}
+        , description='Use the location of the observers to determine the distance of the street segment.'
+        )
+
     # delete
 
     # recaptcha = RecaptchaField()
