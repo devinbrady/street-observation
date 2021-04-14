@@ -65,7 +65,6 @@ class SessionSettingsForm(FlaskForm):
 
     distance_value = DecimalField(
         'Distance'
-        , [DataRequired()]
         , places=None
         , render_kw={'class': 'form-control'}
         )

@@ -114,20 +114,30 @@ $(document).ready(function(){
 
     function success_user_a(pos) {
         window.console&&console.log("User A geolocation succeeded");
+        var btn = document.getElementById("geolocation_button_user_a")
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-success');
+        btn.innerHTML = 'User A: located'
+
         var crd = pos.coords;
 
         user_a_latitude = crd.latitude
         user_a_longitude = crd.longitude
-        socket.emit('geolocation reported', {'user_a_latitude': user_a_latitude, 'user_a_longitude': user_a_longitude, 'user_b_latitude': user_b_latitude, 'user_b_longitude': user_b_longitude});
+        socket.emit('geolocation reported', {'session_id': session_id, 'user_a_latitude': user_a_latitude, 'user_a_longitude': user_a_longitude, 'user_b_latitude': user_b_latitude, 'user_b_longitude': user_b_longitude});
     };
 
     function success_user_b(pos) {
         window.console&&console.log("User B geolocation succeeded");
+        var btn = document.getElementById("geolocation_button_user_b")
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-success');
+        btn.innerHTML = 'User B: located'
+
         var crd = pos.coords;
 
         user_b_latitude = crd.latitude
         user_b_longitude = crd.longitude
-        socket.emit('geolocation reported', {'user_a_latitude': user_a_latitude, 'user_a_longitude': user_a_longitude, 'user_b_latitude': user_b_latitude, 'user_b_longitude': user_b_longitude});
+        socket.emit('geolocation reported', {'session_id': session_id, 'user_a_latitude': user_a_latitude, 'user_a_longitude': user_a_longitude, 'user_b_latitude': user_b_latitude, 'user_b_longitude': user_b_longitude});
     };
 
     function error(err) {
@@ -139,6 +149,7 @@ $(document).ready(function(){
         var btn = document.getElementById("geolocation_button_user_a")
         btn.classList.remove('btn-primary');
         btn.classList.add('btn-secondary');
+        btn.innerHTML = 'User A: locating...'
 
         if (navigator.geolocation) {
             window.console&&console.log("Determining your device location, please wait... ");
@@ -152,6 +163,7 @@ $(document).ready(function(){
         var btn = document.getElementById("geolocation_button_user_b")
         btn.classList.remove('btn-primary');
         btn.classList.add('btn-secondary');
+        btn.innerHTML = 'User B: locating...'
       
         if (navigator.geolocation) {
             window.console&&console.log("Determining your device location, please wait... ");
@@ -167,13 +179,13 @@ $(document).ready(function(){
         user_b_latitude = msg['user_b_latitude'];
         user_b_longitude = msg['user_b_longitude'];
         distance_meters = msg['distance_meters'];
+        distance_value = msg['distance_value']
+        distance_units = msg['distance_units']
 
         if (distance_meters > -1) {
             document.getElementById("use_distance").classList.remove("invisible");
             document.getElementById("cancel_distance").classList.remove("invisible");
-            document.getElementById("distance_output").innerHTML = `${distance_meters} meters`;
-        } else {
-            window.console&&console.log("Oh well");
+            document.getElementById("distance_output").innerHTML = `Distance: ${distance_value} ${distance_units}`;
         };
         
     });
@@ -197,13 +209,15 @@ $(document).ready(function(){
 
   <div id="use_distance" class="use_distance btn btn-primary invisible" value="Use This Distance">Use This Distance</div>
   <a href='/session_settings?session_id={{ session_id }}'><button id="cancel_distance" class="cancel_distance btn btn-dark invisible" value="Input Distance Manually">Input Distance Manually</button></a>
-{% endif %}
 
 
-  <h2>Timer</h2>
-  <div style="height: 300px" class="d-grid gap-2 d-md-block">
-  <button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
-  </div>
+  {% else %}
+    <h2>Timer</h2>
+    <div style="height: 300px" class="d-grid gap-2 d-md-block">
+    <button id="myButton" class="timer_button btn btn-success" value="Start Timer">Start Timer</button>
+    </div>
+
+  {% endif %}
 
 {% endif %}
 

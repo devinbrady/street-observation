@@ -64,8 +64,20 @@ def geolocation_reported(message):
             , message['user_b_latitude']
             , message['user_b_longitude']
             )
+
+        this_session = utilities.one_session(message['session_id'])
+        distance_units = this_session['distance_units']
+        distance_value = utilities.convert_meters_to_display_value(
+            distance_meters
+            , distance_units
+            )
+
+        distance_value_str = '{:0.1f}'.format(distance_value)
+
     else:
-        distance_meters = None
+        distance_meters = -1
+        distance_value_str = None
+        distance_units = None
 
     emit(
         'info update'
@@ -75,13 +87,15 @@ def geolocation_reported(message):
             , 'user_b_latitude': user_b_latitude
             , 'user_b_longitude': user_b_longitude
             , 'distance_meters': distance_meters
+            , 'distance_value': distance_value_str
+            , 'distance_units': distance_units
         }
         , broadcast=True)
 
 
 
 @socketio.on('use distance')
-def geolocation_reported(message):
+def geolocation_locked_in(message):
 
     this_session = utilities.one_session(message['session_id'])
 
